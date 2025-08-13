@@ -257,7 +257,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               break;
             }  // move to SimpleVector??
             // int layerPairId, int doubletId, int innerHitId, int outerHitId)
-            cells[ind].init(*cellNeighbors, *cellTracks, hh, pairLayerId, ind, i, oi);
+            cells[ind].init(*cellNeighbors, *cellTracks, hh, pairLayerId, ind, inner, outer, i, oi);
+
+            //printf("cell %d pairLayerId = %d i = %d oi = %d inner = %d outer = %d \n", ind, pairLayerId, i, oi, inner, outer);
+            
             isOuterHitOfCell[oi].push_back(acc, ind);
 #ifdef GPU_DEBUG
             if (isOuterHitOfCell[oi].full())

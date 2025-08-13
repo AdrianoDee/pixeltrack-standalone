@@ -26,7 +26,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 #endif
   }
 
-  void CAHitNtupletGeneratorKernels::launchKernels(HitsOnCPU const &hh, TkSoA *tracks_d, Queue &queue) {
+  void CAHitNtupletGeneratorKernels::launchKernels(HitsOnCPU const &hh, TkSoA *tracks_d, caGeometry::CAGeometrySoA const* geometry, Queue &queue) {
     // these are pointer on GPU!
     auto *tuples_d = &tracks_d->hitIndices;
     auto *quality_d = (Quality *)(&tracks_d->m_quality);
@@ -69,10 +69,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                         device_isOuterHitOfCell_.data(),
                                         m_params.hardCurvCut_,
                                         m_params.ptmin_,
-                                        m_params.CAThetaCutBarrel_,
-                                        m_params.CAThetaCutForward_,
-                                        m_params.dcaCutInnerTriplet_,
-                                        m_params.dcaCutOuterTriplet_));
+                                        geometry
+                                        // m_params.CAThetaCutBarrel_,
+                                        // m_params.CAThetaCutForward_,
+                                        // m_params.dcaCutInnerTriplet_,
+                                        // m_params.dcaCutOuterTriplet_
+                                      ));
 
     if (nhits > 1 && m_params.earlyFishbone_) {
       const uint32_t nthTot = 128;

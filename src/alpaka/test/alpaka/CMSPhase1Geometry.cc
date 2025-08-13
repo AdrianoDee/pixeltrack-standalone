@@ -67,12 +67,12 @@ constexpr uint32_t layerStart[nLayers + 1] = {
 
 // caThetaCuts and caDCACuts
 constexpr float caDCACuts_vals[nLayers] = {
-    0.05, 0.1, 0.1, 0.1, 0.1,
-    0.1, 0.1, 0.1, 0.1, 0.1
+    0.15, 0.25, 0.25, 0.25, 0.25,
+    0.25, 0.25, 0.25, 0.25, 0.25
 };
 constexpr float caThetaCuts_vals[nLayers] = {
-    0.001, 0.001, 0.001, 0.001, 0.002,
-    0.002, 0.002, 0.002, 0.002, 0.002
+    0.002, 0.002, 0.002, 0.002, 0.003,
+    0.003, 0.003, 0.003, 0.003, 0.003
 };
 
 int write() {

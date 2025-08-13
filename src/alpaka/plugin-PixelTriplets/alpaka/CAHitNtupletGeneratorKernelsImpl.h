@@ -6,6 +6,7 @@
 //
 
 // #define NTUPLE_DEBUG
+// #define GPU_DEBUG
 
 #include <algorithm>
 #include <cmath>
@@ -229,11 +230,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                   GPUCACell::OuterHitOfCell const *__restrict__ isOuterHitOfCell,
                                   float hardCurvCut,
                                   float ptmin,
-                                  float CAThetaCutBarrel,
-                                  float CAThetaCutForward,
-                                  float dcaCutInnerTriplet,
-                                  float dcaCutOuterTriplet) const {
+                                  caGeometry::CAGeometrySoA const* geometry
+                                  // float CAThetaCutBarrel,
+                                  // float CAThetaCutForward,
+                                  // float dcaCutInnerTriplet,
+                                  // float dcaCutOuterTriplet
+                                ) const {
       auto const &hh = *hhp;
+      auto caLayers = geometry->m_layers;
 
       const uint32_t dimIndexY = 0u;
       const uint32_t dimIndexX = 1u;
@@ -258,14 +262,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             int numberOfPossibleNeighbors = isOuterHitOfCell[innerHitId].size();
             const auto *__restrict__ vi = isOuterHitOfCell[innerHitId].data();
 
-            constexpr uint32_t last_bpix1_detIndex = 96;
-            constexpr uint32_t last_barrel_detIndex = 1184;
+            // constexpr uint32_t last_bpix1_detIndex = 96;
+            // constexpr uint32_t last_barrel_detIndex = 1184;
             auto ri = thisCell.get_inner_r(hh);
             auto zi = thisCell.get_inner_z(hh);
 
             auto ro = thisCell.get_outer_r(hh);
             auto zo = thisCell.get_outer_z(hh);
-            auto isBarrel = thisCell.get_inner_detIndex(hh) < last_barrel_detIndex;
+            // auto isBarrel = thisCell.get_inner_detIndex(hh) < last_barrel_detIndex;
+            auto middleLayer = thisCell.innerLayer();
+            auto caThetaCut = caLayers[middleLayer].caThetaCut;
 
             cms::alpakatools::for_each_element_in_block_strided(
                 acc,
@@ -279,6 +285,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                   //  continue;
                   auto r1 = oc.get_inner_r(hh);
                   auto z1 = oc.get_inner_z(hh);
+                  auto innerLayer = oc.innerLayer();
+                  auto dcaCut = caLayers[innerLayer].caDCACut;
+#ifdef GPU_DEBUG
+                  printf("cuts;i = %d; o = %d middleLayer = %d innerLayer = %d ;caThetaCut = %.4f dcaCut = %.4f\n",thisCell.theLayerPairId,oc.theLayerPairId,middleLayer, innerLayer,caThetaCut,dcaCut);
+#endif
                   // auto isBarrel = oc.get_outer_detIndex(hh) < last_barrel_detIndex;
                   bool aligned = GPUCACell::areAlignedRZ(
                       r1,
@@ -288,11 +299,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                       ro,
                       zo,
                       ptmin,
-                      isBarrel ? CAThetaCutBarrel : CAThetaCutForward);  // 2.f*thetaCut); // FIXME tune cuts
+                      caThetaCut);  // 2.f*thetaCut); // FIXME tune cuts
                   if (aligned && thisCell.dcaCut(hh,
                                                  oc,
-                                                 oc.get_inner_detIndex(hh) < last_bpix1_detIndex ? dcaCutInnerTriplet
-                                                                                                 : dcaCutOuterTriplet,
+                                                 dcaCut,
                                                  hardCurvCut)) {  // FIXME tune cuts
                     oc.addOuterNeighbor(acc, cellIndex, *cellNeighbors);
                     thisCell.theUsed |= 1;

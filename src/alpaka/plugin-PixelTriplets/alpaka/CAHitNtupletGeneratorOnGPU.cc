@@ -96,7 +96,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     CAHitNtupletGeneratorKernels kernels(m_params, hits_d.nHits(), queue);
     kernels.buildDoublets(hits_d, geometry, queue);
-    kernels.launchKernels(hits_d, tracks.data(), queue);
+    kernels.launchKernels(hits_d, tracks.data(), geometry, queue);
     kernels.fillHitDetIndices(hits_d.view(), tracks.data(), queue);  // in principle needed only if Hits not "available"
 
     HelixFitOnGPU fitter(bfield, m_params.fit5as4_);

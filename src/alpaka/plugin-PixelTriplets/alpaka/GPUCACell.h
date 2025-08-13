@@ -48,12 +48,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                                             Hits const& hh,
                                                                             int layerPairId,
                                                                             int doubletId,
+                                                                            int innerLayer,
+                                                                            int outerLayer,
                                                                             hindex_type innerHitId,
                                                                             hindex_type outerHitId) {
       theInnerHitId = innerHitId;
       theOuterHitId = outerHitId;
       theDoubletId = doubletId;
       theLayerPairId = layerPairId;
+      theInnerLayer = innerLayer;
+      theOuterLayer = outerLayer;
       theUsed = 0;
 
       // optimization that depends on access pattern
@@ -176,6 +180,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     constexpr unsigned int get_inner_hit_id() const { return theInnerHitId; }
     constexpr unsigned int get_outer_hit_id() const { return theOuterHitId; }
+    constexpr unsigned int innerLayer() const { return theInnerLayer; }
+    constexpr unsigned int outerLayer() const { return theOuterLayer; }
 
     ALPAKA_FN_ACC void print_cell() const {
       printf("printing cell: %d, on layerPair: %d, innerHitId: %d, outerHitId: %d \n",
@@ -402,6 +408,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     float theInnerR;
     hindex_type theInnerHitId;
     hindex_type theOuterHitId;
+    int16_t theInnerLayer;
+    int16_t theOuterLayer;
   };
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE
 

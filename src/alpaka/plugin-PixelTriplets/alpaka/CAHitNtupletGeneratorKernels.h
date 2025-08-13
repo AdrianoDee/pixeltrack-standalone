@@ -205,7 +205,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     TupleMultiplicity const* tupleMultiplicity() const { return device_tupleMultiplicity_.data(); }
 
-    void launchKernels(HitsOnCPU const& hh, TkSoA* tuples_d, Queue& queue);
+    void launchKernels(HitsOnCPU const& hh, TkSoA* tuples_d, caGeometry::CAGeometrySoA const* geometry, Queue& queue);
 
     void classifyTuples(HitsOnCPU const& hh, TkSoA* tuples_d, Queue& queue);
 
