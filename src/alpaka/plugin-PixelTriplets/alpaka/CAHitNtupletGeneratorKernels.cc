@@ -233,15 +233,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     if (0 == nhits)
       return;  // protect against empty events
 
-    // FIXME avoid magic numbers
-    auto nActualPairs = gpuPixelDoublets::nPairs;
-    if (!m_params.includeJumpingForwardDoublets_)
-      nActualPairs = 15;
-    if (m_params.minHitsPerNtuplet_ > 3) {
-      nActualPairs = 13;
-    }
+    // // FIXME avoid magic numbers
+    // auto nActualPairs = gpuPixelDoublets::nPairs;
+    // if (!m_params.includeJumpingForwardDoublets_)
+    //   nActualPairs = 15;
+    // if (m_params.minHitsPerNtuplet_ > 3) {
+    //   nActualPairs = 13;
+    // }
 
-    ALPAKA_ASSERT_ACC(nActualPairs <= gpuPixelDoublets::nPairs);
+    // ALPAKA_ASSERT_ACC(nActualPairs <= gpuPixelDoublets::nPairs);
     const uint32_t stride = 4;
     const uint32_t threadsPerBlock = gpuPixelDoublets::getDoubletsFromHistoMaxBlockSize / stride;
     const uint32_t blocks = cms::alpakatools::divide_up_by(4 * nhits, threadsPerBlock);
@@ -257,7 +257,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                     device_theCellTracks_.data(),
                                                     hh.view(),
                                                     device_isOuterHitOfCell_.data(),
-                                                    nActualPairs,
+                                                    // nActualPairs,
+                                                    geometry,
                                                     m_params.idealConditions_,
                                                     m_params.doClusterCut_,
                                                     m_params.doZ0Cut_,

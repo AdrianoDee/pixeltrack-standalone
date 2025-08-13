@@ -27,23 +27,27 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TAcc>
     ALPAKA_FN_ACC ALPAKA_FN_INLINE __attribute__((always_inline)) void doubletsFromHisto(
         const TAcc& acc,
-        uint8_t const* __restrict__ layerPairs,
-        uint32_t nPairs,
+        // uint8_t const* __restrict__ layerPairs,
+        // uint32_t nPairs,
         GPUCACell* cells,
         uint32_t* nCells,
         CellNeighborsVector* cellNeighbors,
         CellTracksVector* cellTracks,
         TrackingRecHit2DSoAView const& __restrict__ hh,
         GPUCACell::OuterHitOfCell* isOuterHitOfCell,
-        int16_t const* __restrict__ phicuts,
-        float const* __restrict__ minz,
-        float const* __restrict__ maxz,
-        float const* __restrict__ maxr,
+        caGeometry::CAGeometrySoA const* geometry,
+        // int16_t const* __restrict__ phicuts,
+        // float const* __restrict__ minz,
+        // float const* __restrict__ maxz,
+        // float const* __restrict__ maxr,
         bool ideal_cond,
         bool doClusterCut,
         bool doZ0Cut,
         bool doPtCut,
         uint32_t maxNumOfDoublets) {
+
+      auto layerPairs = geometry->m_pairs;
+      auto nPairs = geometry->m_nPairs;
       // ysize cuts (z in the barrel)  times 8
       // these are used if doClusterCut is true
       constexpr int minYsizeB1 = 36;
@@ -52,7 +56,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       constexpr int maxDYsize = 20;
       constexpr int maxDYPred = 20;
       constexpr float dzdrFact = 8 * 0.0285 / 0.015;  // from dz/dr to "DY"
-
+      
       bool isOuterLadder = ideal_cond;
 
       using Hist = TrackingRecHit2DSoAView::Hist;
@@ -76,9 +80,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       const uint32_t threadIdxLocalY(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[dimIndexY]);
       const uint32_t threadIdxLocalX(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[dimIndexX]);
       if (threadIdxLocalY == 0 && threadIdxLocalX == 0) {
-        innerLayerCumulativeSize[0] = layerSize(layerPairs[0]);
+        innerLayerCumulativeSize[0] = layerSize(layerPairs[0].innerLayer);
         for (uint32_t i = 1; i < nPairs; ++i) {
-          innerLayerCumulativeSize[i] = innerLayerCumulativeSize[i - 1] + layerSize(layerPairs[2 * i]);
+          innerLayerCumulativeSize[i] = innerLayerCumulativeSize[i - 1] + layerSize(layerPairs[i].innerLayer);
         }
         ntot = innerLayerCumulativeSize[nPairs - 1];
       }
@@ -110,8 +114,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         ALPAKA_ASSERT_ACC(j < innerLayerCumulativeSize[pairLayerId]);
         ALPAKA_ASSERT_ACC(0 == pairLayerId || j >= innerLayerCumulativeSize[pairLayerId - 1]);
 
-        uint8_t inner = layerPairs[2 * pairLayerId];
-        uint8_t outer = layerPairs[2 * pairLayerId + 1];
+        uint8_t inner = layerPairs[pairLayerId].innerLayer;
+        uint8_t outer = layerPairs[pairLayerId].outerLayer;
         ALPAKA_ASSERT_ACC(outer > inner);
 
         auto hoff = Hist::histOff(outer);
@@ -137,7 +141,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
         auto mez = hh.zGlobal(i);
 
-        if (mez < minz[pairLayerId] || mez > maxz[pairLayerId])
+        if (mez < layerPairs[pairLayerId].minz || mez > layerPairs[pairLayerId].maxz)
           continue;
 
         int16_t mes = -1;  // make compiler happy
@@ -177,7 +181,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           auto zo = hh.zGlobal(j);
           auto ro = hh.rGlobal(j);
           auto dr = ro - mer;
-          return dr > maxr[pairLayerId] || dr < 0 || std::abs((mez * ro - mer * zo)) > z0cut * dr;
+          return dr > layerPairs[pairLayerId].maxr || dr < 0 || std::abs((mez * ro - mer * zo)) > z0cut * dr;
         };
 
         auto zsizeCut = [&](int j) {
@@ -194,7 +198,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                   std::abs(mes - int(std::abs((mez - zo) / (mer - ro)) * dzdrFact + 0.5f)) > maxDYPred;
         };
 
-        auto iphicut = phicuts[pairLayerId];
+        auto iphicut = layerPairs[pairLayerId].phiCut;
 
         auto kl = Hist::bin(int16_t(mep - iphicut));
         auto kh = Hist::bin(int16_t(mep + iphicut));
