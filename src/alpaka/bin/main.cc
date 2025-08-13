@@ -270,6 +270,7 @@ int main(int argc, char** argv) {
       esmodules.emplace_back(prefix + "SiPixelFedCablingMapESProducer");
       esmodules.emplace_back(prefix + "SiPixelGainCalibrationForHLTESProducer");
       esmodules.emplace_back(prefix + "PixelCPEFastESProducer");
+      esmodules.emplace_back(prefix + "CAGeometryESProducer");
       // "portable" EDModules
       std::vector<std::string> edmodules;
       edmodules.emplace_back(prefix + "BeamSpotToAlpaka");

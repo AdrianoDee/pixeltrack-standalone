@@ -197,7 +197,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // device_isOuterHitOfCell_.reset();
   }
 
-  void CAHitNtupletGeneratorKernels::buildDoublets(HitsOnCPU const &hh, Queue &queue) {
+  void CAHitNtupletGeneratorKernels::buildDoublets(HitsOnCPU const &hh, caGeometry::CAGeometrySoA const* geometry, Queue &queue) {
     auto nhits = hh.nHits();
 
 #ifdef NTUPLE_DEBUG

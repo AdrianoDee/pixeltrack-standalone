@@ -8,6 +8,7 @@
 #include "Framework/Event.h"
 #include "Framework/EventSetup.h"
 #include "Framework/PluginFactory.h"
+#include "CondFormats/alpaka/CAGeometry.h"
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
@@ -33,11 +34,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   void CAHitNtupletAlpaka::produce(edm::Event& iEvent, const edm::EventSetup& es) {
     auto bf = 0.0114256972711507;  // 1/fieldInGeV
 
+    auto const& geo = es.get<CAGeometry>();
+
     auto const& phits = iEvent.get(tokenHitGPU_);
     cms::alpakatools::ScopedContextProduce<Queue> ctx{phits};
     auto const& hits = ctx.get(phits);
 
-    ctx.emplace(iEvent, tokenTrackGPU_, gpuAlgo_.makeTuplesAsync(hits, bf, ctx.stream()));
+    ctx.emplace(iEvent, tokenTrackGPU_, gpuAlgo_.makeTuplesAsync(hits, bf, geo.getGPUProductAsync(ctx.stream()), ctx.stream()));
   }
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

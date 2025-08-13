@@ -5,6 +5,7 @@
 
 #include "AlpakaCore/memory.h"
 #include "AlpakaDataFormats/alpaka/PixelTrackAlpaka.h"
+#include "CondFormats/alpaka/CAGeometry.h"
 
 #include "GPUCACell.h"
 
@@ -210,7 +211,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     void fillHitDetIndices(HitsView const* hv, TkSoA* tuples_d, Queue& queue);
 
-    void buildDoublets(HitsOnCPU const& hh, Queue& queue);
+    void buildDoublets(HitsOnCPU const& hh, caGeometry::CAGeometrySoA const* geometry, Queue& queue);
     void cleanup(Queue& queue);
 
     void printCounters(Queue& queue);

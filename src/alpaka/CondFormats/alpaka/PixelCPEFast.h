@@ -8,6 +8,7 @@
 #include "AlpakaCore/memory.h"
 #include "CondFormats/pixelCPEforGPU.h"
 
+#define DUMPDETS
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class PixelCPEFast {
@@ -27,6 +28,45 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       in.read(reinterpret_cast<char *>(m_detParamsGPU.data()), ndetParams * sizeof(pixelCPEforGPU::DetParams));
       in.read(reinterpret_cast<char *>(m_averageGeometry.data()), sizeof(pixelCPEforGPU::AverageGeometry));
       in.read(reinterpret_cast<char *>(m_layerGeometry.data()), sizeof(pixelCPEforGPU::LayerGeometry));
+#ifdef DUMPDETS
+      std::ofstream out("CMSPhase1Modules.bin", std::ios::binary);
+      if (!out) throw std::runtime_error("Cannot open file for writing");
+
+      std::cout << "=== Writing " <<  ndetParams << " modules" << std::endl;
+      for(auto const &v: m_detParamsGPU)
+      {
+        
+        auto f = v.frame;
+        out.write(reinterpret_cast<const char*>(&f), sizeof(f));
+        // auto r = f.rotation();
+
+        // std::cout << f.x() << ";" << f.y() << ";" << f.z() << ";";
+        // std::cout << r.xx() << ";" << r.xy() << ";" << r.xz() << ";";
+        // std::cout << r.yx() << ";" << r.yy() << ";" << r.yz() << ";";
+        // std::cout << r.zx() << ";" << r.zy() << ";" << r.zz() << "\n";
+        
+
+      }
+
+      out.close();
+
+      // std::cout << "=== Reading" << std::endl;
+
+      // std::ifstream inframe("modules.bin", std::ios::binary);
+      // SOAFrame<float> f;
+
+      // while(static_cast<bool>(inframe.read(reinterpret_cast<char*>(&f), sizeof(SOAFrame<float>))))
+      // {
+      //   auto r = f.rotation();
+
+      //   std::cout << f.x() << ";" << f.y() << ";" << f.z() << ";";
+      //   std::cout << r.xx() << ";" << r.xy() << ";" << r.xz() << ";";
+      //   std::cout << r.yx() << ";" << r.yy() << ";" << r.yz() << ";";
+      //   std::cout << r.zx() << ";" << r.zy() << ";" << r.zz() << "\n";
+
+      // }
+
+#endif       
     }
 
     ~PixelCPEFast() = default;
