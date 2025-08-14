@@ -31,7 +31,7 @@ public:
   using hindex_type = uint16_t;  // if above is <=2^16
 
   using Hist =
-      cms::alpakatools::HistoContainer<int16_t, 128, gpuClustering::MaxNumClusters, 8 * sizeof(int16_t), uint16_t, 10>;
+      cms::alpakatools::HistoContainer<int16_t, 128, gpuClustering::MaxNumClusters, 8 * sizeof(int16_t), uint16_t, 50>; //TODO make this templated
 
   using AverageGeometry = phase1PixelTopology::AverageGeometry;
 
@@ -76,6 +76,7 @@ public:
 
   ALPAKA_FN_ACC ALPAKA_FN_INLINE pixelCPEforGPU::ParamsOnGPU const& cpeParams() const { return *m_cpeParams; }
 
+  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t const* hitsModuleStarts() const { return m_hitsLayerStart; }
   ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t hitsModuleStart(int i) const { return m_hitsModuleStart[i]; }
 
   ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t* hitsLayerStart() { return m_hitsLayerStart; }

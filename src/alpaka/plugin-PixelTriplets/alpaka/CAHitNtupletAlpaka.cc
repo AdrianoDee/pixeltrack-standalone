@@ -39,8 +39,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto const& phits = iEvent.get(tokenHitGPU_);
     cms::alpakatools::ScopedContextProduce<Queue> ctx{phits};
     auto const& hits = ctx.get(phits);
-
-    ctx.emplace(iEvent, tokenTrackGPU_, gpuAlgo_.makeTuplesAsync(hits, bf, geo.getGPUProductAsync(ctx.stream()), ctx.stream()));
+    ctx.emplace(iEvent, tokenTrackGPU_, gpuAlgo_.makeTuplesAsync(hits, bf, geo.getGPUProductAsync(ctx.stream()), geo.sizes(), ctx.stream()));
   }
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

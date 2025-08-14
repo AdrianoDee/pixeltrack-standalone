@@ -38,6 +38,13 @@ namespace caGeometry
   using CALayers = CALayer[MAXLAYERS];
   using CAPairs = CAPair[MAXPAIRS];
 
+  struct CASizes
+  {
+    uint16_t nModules;
+    uint16_t nLayers;
+    uint16_t nPairs;
+  };
+
   struct CAGeometrySoA
   {
 

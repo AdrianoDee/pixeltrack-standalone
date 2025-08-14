@@ -23,7 +23,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     using CellTracks = CAConstants::CellTracks;
     using CellNeighborsVector = CAConstants::CellNeighborsVector;
     using CellTracksVector = CAConstants::CellTracksVector;
-
+    using PhiHist = CAConstants::PhiHist;
+    
     template <typename TAcc>
     ALPAKA_FN_ACC ALPAKA_FN_INLINE __attribute__((always_inline)) void doubletsFromHisto(
         const TAcc& acc,
@@ -35,6 +36,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         CellTracksVector* cellTracks,
         TrackingRecHit2DSoAView const& __restrict__ hh,
         GPUCACell::OuterHitOfCell* isOuterHitOfCell,
+        PhiHist const* hist,
         caGeometry::CAGeometrySoA const* geometry,
         // int16_t const* __restrict__ phicuts,
         // float const* __restrict__ minz,
@@ -59,9 +61,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       
       bool isOuterLadder = ideal_cond;
 
-      using Hist = TrackingRecHit2DSoAView::Hist;
-
-      auto const& __restrict__ hist = hh.phiBinner();
       uint32_t const* __restrict__ offsets = hh.hitsLayerStart();
       ALPAKA_ASSERT_ACC(offsets);
 
@@ -118,7 +117,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         uint8_t outer = layerPairs[pairLayerId].outerLayer;
         ALPAKA_ASSERT_ACC(outer > inner);
 
-        auto hoff = Hist::histOff(outer);
+        auto hoff = PhiHist::histOff(outer);
 
         auto i = (0 == pairLayerId) ? j : j - innerLayerCumulativeSize[pairLayerId - 1];
         i += offsets[inner];
@@ -200,9 +199,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
         auto iphicut = layerPairs[pairLayerId].phiCut;
 
-        auto kl = Hist::bin(int16_t(mep - iphicut));
-        auto kh = Hist::bin(int16_t(mep + iphicut));
-        auto incr = [](auto& k) { return k = (k + 1) % Hist::nbins(); };
+        auto kl = PhiHist::bin(int16_t(mep - iphicut));
+        auto kh = PhiHist::bin(int16_t(mep + iphicut));
+        auto incr = [](auto& k) { return k = (k + 1) % PhiHist::nbins(); };
         // bool piWrap = std::abs(kh-kl) > Hist::nbins()/2;
 
 #ifdef GPU_DEBUG
@@ -216,10 +215,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         for (auto kk = kl; kk != khh; incr(kk)) {
 #ifdef GPU_DEBUG
           if (kk != kl && kk != kh)
-            nmin += hist.size(kk + hoff);
+            nmin += hist->size(kk + hoff);
 #endif
-          auto const* __restrict__ p = hist.begin(kk + hoff);
-          auto const* __restrict__ e = hist.end(kk + hoff);
+          auto const* __restrict__ p = hist->begin(kk + hoff);
+          auto const* __restrict__ e = hist->end(kk + hoff);
           auto const maxpIndex = e - p;
           // Here we parallelize in X
           //p += first;

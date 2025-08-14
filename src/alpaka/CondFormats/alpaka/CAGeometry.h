@@ -51,6 +51,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       m_caLayers.resize(nLayers + 1);  // layer vector has nLayers+1 elements
       m_caPairs.resize(nPairs);
 
+      // to be used on host
+      m_sizes.nModules = nModules;
+      m_sizes.nLayers = nLayers;
+      m_sizes.nPairs = nPairs;
       // Read modules
       in.read(reinterpret_cast<char*>(m_caModules.data()), nModules * sizeof(caGeometry::CAModule));
 
@@ -67,6 +71,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     ~CAGeometry() = default;
 
+    caGeometry::CASizes const& sizes() const { return m_sizes;}
     // The return value can only be used safely in kernels launched on
     // the same cudaStream, or after cudaStreamSynchronize.
     const caGeometry::CAGeometrySoA *getGPUProductAsync(Queue &queue) const {
@@ -93,7 +98,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         gpuData.h_geometry->m_nModules = nModules;
         gpuData.h_geometry->m_nLayers = nLayers;
         gpuData.h_geometry->m_nPairs = nPairs;
-
+        
         alpaka::memcpy(queue, gpuData.d_geometry, gpuData.h_geometry);
         
         return gpuData;
@@ -106,6 +111,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::vector<caGeometry::CAModule> m_caModules;
     std::vector<caGeometry::CALayer> m_caLayers;
     std::vector<caGeometry::CAPair> m_caPairs;
+    caGeometry::CASizes m_sizes;
 
     struct GPUData {
       // not needed if not used on CPU...

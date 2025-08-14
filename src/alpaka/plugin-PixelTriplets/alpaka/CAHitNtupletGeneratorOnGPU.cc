@@ -91,11 +91,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   PixelTrackAlpaka CAHitNtupletGeneratorOnGPU::makeTuplesAsync(TrackingRecHit2DAlpaka const& hits_d,
                                                                float bfield,
                                                                caGeometry::CAGeometrySoA const* geometry,
+                                                               caGeometry::CASizes const& sizes,
                                                                Queue& queue) const {
     PixelTrackAlpaka tracks = cms::alpakatools::make_device_buffer<pixelTrack::TrackSoA>(queue);
-
-    CAHitNtupletGeneratorKernels kernels(m_params, hits_d.nHits(), queue);
+    
+    // std::cout << "kernels " << std::endl;
+//     std::cout << sizes.nLayers << std::endl;
+    CAHitNtupletGeneratorKernels kernels(m_params, hits_d.nHits(), sizes.nLayers, queue);
+    // std::cout << "prepareHits" << std::endl;
+    kernels.prepareHits(hits_d,geometry,queue);
+    // std::cout << "buildDoublets" << std::endl;
     kernels.buildDoublets(hits_d, geometry, queue);
+    // std::cout << "launchKernels" << std::endl;
     kernels.launchKernels(hits_d, tracks.data(), geometry, queue);
     kernels.fillHitDetIndices(hits_d.view(), tracks.data(), queue);  // in principle needed only if Hits not "available"
 

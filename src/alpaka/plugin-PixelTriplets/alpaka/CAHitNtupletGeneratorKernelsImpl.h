@@ -33,6 +33,23 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   using TkSoA = pixelTrack::TrackSoA;
   using HitContainer = pixelTrack::HitContainer;
 
+  struct setHitsLayerStart {
+    template <typename TAcc>
+    ALPAKA_FN_ACC void operator()(const TAcc& acc,
+                                  TrackingRecHit2DSoAView const *__restrict__ hhp,
+                                  caGeometry::CAGeometrySoA const* geometry,
+                                  uint32_t* hitsLayerStart) const {
+      ALPAKA_ASSERT_ACC(0 == hhp->hitsModuleStart(0));
+
+      cms::alpakatools::for_each_element_in_grid(acc, 11, [&](uint32_t i) {
+        hitsLayerStart[i] = hhp->hitsModuleStart(geometry->m_layers[i].layerStarts);
+#ifdef GPU_DEBUG
+        printf("LayerStart %d %d: %d\n", i, geometry->m_layers[i].layerStarts, hitsLayerStart[i]);
+#endif
+      });
+    }
+    };
+
   struct kernel_checkOverflows {
     template <typename TAcc>
     ALPAKA_FN_ACC void operator()(const TAcc &acc,

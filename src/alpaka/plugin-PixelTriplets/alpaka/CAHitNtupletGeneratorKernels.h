@@ -4,7 +4,9 @@
 #include <algorithm>
 
 #include "AlpakaCore/memory.h"
+#include "AlpakaCore/HistoContainer.h"
 #include "AlpakaDataFormats/alpaka/PixelTrackAlpaka.h"
+#include "AlpakaDataFormats/TrackingRecHit2DSoAView.h"
 #include "CondFormats/alpaka/CAGeometry.h"
 
 #include "GPUCACell.h"
@@ -37,7 +39,7 @@ namespace cAHitNtupletGenerator {
   using Quality = pixelTrack::Quality;
   using TkSoA = pixelTrack::TrackSoA;
   using HitContainer = pixelTrack::HitContainer;
-
+  
   struct QualityCuts {
     // chi2 cut = chi2Scale * (chi2Coeff[0] + pT/GeV * (chi2Coeff[1] + pT/GeV * (chi2Coeff[2] + pT/GeV * chi2Coeff[3])))
     float chi2Coeff[4];
@@ -160,12 +162,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     using TkSoA = pixelTrack::TrackSoA;
     using HitContainer = pixelTrack::HitContainer;
 
-    CAHitNtupletGeneratorKernels(Params const& params, uint32_t nhits, Queue& queue)
-        : m_params(params),
+    using PhiHist = CAConstants::PhiHist;
+
+    CAHitNtupletGeneratorKernels(Params const& params, uint32_t nhits, uint16_t nLayers, Queue& queue)
+        : m_Layers(nLayers),
+          m_params(params),
           //////////////////////////////////////////////////////////
           // ALLOCATIONS FOR THE INTERMEDIATE RESULTS (STAYS ON WORKER)
           //////////////////////////////////////////////////////////
           counters_{cms::alpakatools::make_device_buffer<Counters>(queue)},
+
+          // hits
+          device_hitHist_{cms::alpakatools::make_device_buffer<PhiHist>(queue)},
+          device_layerStarts_{cms::alpakatools::make_device_buffer<uint32_t[]>(queue, nLayers + 1)},
 
           // workspace
           device_hitToTuple_{cms::alpakatools::make_device_buffer<HitToTuple>(queue)},
@@ -199,6 +208,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       alpaka::memset(queue, device_nCells_, 0);
       cms::alpakatools::launchZero<Acc1D>(device_tupleMultiplicity_.data(), queue);
       cms::alpakatools::launchZero<Acc1D>(device_hitToTuple_.data(), queue);
+      
     }
 
     ~CAHitNtupletGeneratorKernels() = default;
@@ -212,21 +222,30 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     void fillHitDetIndices(HitsView const* hv, TkSoA* tuples_d, Queue& queue);
 
     void buildDoublets(HitsOnCPU const& hh, caGeometry::CAGeometrySoA const* geometry, Queue& queue);
+
+    void prepareHits(TrackingRecHit2DAlpaka const& hits_d, caGeometry::CAGeometrySoA const* geometry, Queue& queue);
+
     void cleanup(Queue& queue);
 
     void printCounters(Queue& queue);
     //Counters* counters_ = nullptr;
 
   private:
+    // sizes
+    const uint16_t m_Layers;
+
     // params
     Params const& m_params;
-
     // NB: Counters: In legacy, sum of the stats of all events.
     // Here instead, these stats are per event.
     // Does not matter much, as the stats are desactivated by default anyway, and are for debug only
     // (stats are not stored eventually, no interference with any result).
     // For debug, better to be able to see info per event that just a sum.
     cms::alpakatools::device_buffer<Device, Counters> counters_;
+    
+    // // hit histograms
+    cms::alpakatools::device_buffer<Device, PhiHist> device_hitHist_;
+    cms::alpakatools::device_buffer<Device, uint32_t[]> device_layerStarts_;
 
     // workspace
     cms::alpakatools::device_buffer<Device, HitToTuple> device_hitToTuple_;
@@ -249,6 +268,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     cms::alpakatools::AtomicPairCounter* device_hitTuple_apc_;
     cms::alpakatools::AtomicPairCounter* device_hitToTuple_apc_;
     cms::alpakatools::device_view<Device, uint32_t> device_nCells_;
+
+  
   };
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

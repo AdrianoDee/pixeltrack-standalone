@@ -12,6 +12,37 @@
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
+  void CAHitNtupletGeneratorKernels::prepareHits(/*HitsView const* hv,*/
+                                                 TrackingRecHit2DAlpaka const& hits_d,
+                                                 caGeometry::CAGeometrySoA const* geometry,
+                                                 Queue &queue) {
+    
+    const auto oneBlockWorkDiv = cms::alpakatools::make_workdiv<Acc1D>(1u, this->m_Layers);
+    alpaka::enqueue(
+        queue,
+        alpaka::createTaskKernel<Acc1D>(
+            oneBlockWorkDiv, setHitsLayerStart(), hits_d.view(), geometry, this->device_layerStarts_.data()));
+            
+    // const auto workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(1, ll.metadata().size() - 1);
+    // alpaka::exec<Acc1D>(queue, workDiv1D, SetHitsLayerStart{}, mm, ll, this->device_layerStarts_->data());
+
+    cms::alpakatools::fillManyFromVector<Acc1D>(this->device_hitHist_.data(), this->m_Layers, hits_d.c_iphi(), hits_d.c_hitsLayerStart(), hits_d.nHits(), 256, queue);
+
+    // cms::alpakatools::fillManyFromVector<Acc1D>(device_hitPhiHist_->data(),
+    //                                             device_hitPhiView_,
+    //                                             TrackerTraits::numberOfLayers,  // could be ll.metadata().size() - 1
+    //                                             hh.iphi(),
+    //                                             this->device_layerStarts_->data(),
+    //                                             hh.metadata().size(),
+    //                                             (uint32_t)256,
+    //                                             queue);
+
+#ifdef GPU_DEBUG
+    alpaka::wait(queue);
+    std::cout << "CAHitNtupletGeneratorKernels -> Hits prepared (layer starts and histo) -> DONE!" << std::endl;
+#endif
+  }
+
   void CAHitNtupletGeneratorKernels::fillHitDetIndices(HitsView const *hv, TkSoA *tracks_d, Queue &queue) {
     // NB: MPORTANT: This could be tuned to benefit from innermost loop.
     const auto blockSize = 128;
@@ -259,6 +290,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                     device_theCellTracks_.data(),
                                                     hh.view(),
                                                     device_isOuterHitOfCell_.data(),
+                                                    device_hitHist_.data(),
                                                     // nActualPairs,
                                                     geometry,
                                                     m_params.idealConditions_,
