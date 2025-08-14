@@ -63,24 +63,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       alpaka::wait(queue);
 #endif
 
-      // assuming full warp of threads is better than a smaller number...
-      if (nHits) {
-        const auto oneBlockWorkDiv = cms::alpakatools::make_workdiv<Acc1D>(1u, 32u);
-        alpaka::enqueue(
-            queue,
-            alpaka::createTaskKernel<Acc1D>(
-                oneBlockWorkDiv, setHitsLayerStart(), clusters_d.clusModuleStart(), cpeParams, hits_d.hitsLayerStart()));
-      }
-
-      if (nHits) {
-        cms::alpakatools::fillManyFromVector<Acc1D>(
-            hits_d.phiBinner(), 10, hits_d.c_iphi(), hits_d.c_hitsLayerStart(), nHits, 256, queue);
-      }
-
-#ifdef GPU_DEBUG
-      alpaka::wait(queue);
-#endif
-
 #if defined ALPAKA_ACC_CPU_B_TBB_T_SEQ_ASYNC_BACKEND && defined ALPAKA_DISABLE_CACHING_ALLOCATOR
       // FIXME this is required to keep the host buffer inside hits_d alive; it could be removed once the host buffers are also stream-ordered
       alpaka::wait(queue);

@@ -13,7 +13,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class TrackingRecHit2DAlpaka {
   public:
-    using Hist = TrackingRecHit2DSoAView::Hist;
 
     TrackingRecHit2DAlpaka() = delete;  // alpaka buffers are not default-constructible
 
@@ -27,13 +26,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           // TODO replace with Eric's SoA
           // 32-bit SoA data members packed in a single buffer
           m_store32{cms::alpakatools::make_device_buffer<uint32_t[]>(
-              queue, nHits * static_cast<uint32_t>(Fields32::size_) + 11)},
+              queue, nHits * static_cast<uint32_t>(Fields32::size_))},
           // 16-bit SoA data members packed in a single buffer
           m_store16{
               cms::alpakatools::make_device_buffer<uint16_t[]>(queue, nHits * static_cast<uint32_t>(Fields16::size_))},
           // other owning device pointers
           m_averageGeometry{cms::alpakatools::make_device_buffer<TrackingRecHit2DSoAView::AverageGeometry>(queue)},
-          m_hist{cms::alpakatools::make_device_buffer<Hist>(queue)},
           // SoA view
           m_view{cms::alpakatools::make_device_buffer<TrackingRecHit2DSoAView>(queue)},
           m_view_h{cms::alpakatools::make_host_buffer<TrackingRecHit2DSoAView>(queue)} {
@@ -44,7 +42,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       // copy all the pointers
       m_view_h->m_nHits = nHits;
-      m_view_h->m_hist = phiBinner();
 
       // pointer to data already owned in the event by SiPixelClusterAlpaka object:
       m_view_h->m_hitsModuleStart = hitsModuleStart;
@@ -66,7 +63,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       m_view_h->m_xsize = xsize();
       m_view_h->m_ysize = ysize();
       m_view_h->m_detInd = detInd();
-      m_view_h->m_hitsLayerStart = hitsLayerStart();
       m_view_h->m_averageGeometry = m_averageGeometry.data();
 
       // copy the SoA view to the device
@@ -87,9 +83,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     uint32_t nHits() const { return m_nHits; }
 
     uint32_t const* hitsModuleStart() const { return m_hitsModuleStart; }
-
-    Hist* phiBinner() { return m_hist.data(); }
-    Hist const* phiBinner() const { return m_hist.data(); }
 
     auto xlToHostAsync(Queue& queue) const {
       auto device_view = cms::alpakatools::make_device_view(alpaka::getDev(queue), xl(), nHits());
@@ -181,7 +174,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     int16_t* iphi() { return getField16<int16_t>(Fields16::iphi); }
     uint16_t* detInd() { return getField16<uint16_t>(Fields16::detInd); }
-    uint32_t* hitsLayerStart() { return getField32<uint32_t>(Fields32::size_); }
 
     // const accessors
     float const* xl() const { return getField32<float>(Fields32::xl); }
@@ -200,11 +192,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     int16_t const* iphi() const { return getField16<int16_t>(Fields16::iphi); }
     uint16_t const* detInd() const { return getField16<uint16_t>(Fields16::detInd); }
-    uint32_t const* hitsLayerStart() const { return getField32<uint32_t>(Fields32::size_); }
 
     // explicitly const accessors
     int16_t const* c_iphi() const { return getField16<int16_t>(Fields16::iphi); }
-    uint32_t const* c_hitsLayerStart() const { return getField32<uint32_t>(Fields32::size_); }
 
   private:
     uint32_t m_nHits;
@@ -246,9 +236,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     cms::alpakatools::device_buffer<Device, uint16_t[]> m_store16;
 
     cms::alpakatools::device_buffer<Device, TrackingRecHit2DSoAView::AverageGeometry> m_averageGeometry;
-
-    // needed as kernel params...
-    cms::alpakatools::device_buffer<Device, Hist> m_hist;
 
     // This is a SoA view which itself gathers non-owning pointers to the data owned above (in TrackingRecHit2DAlpaka instance).
     // This is used to access and modify data on GPU in a SoA format (TrackingRecHit2DSoAView),

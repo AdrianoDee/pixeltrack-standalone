@@ -41,7 +41,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                   uint32_t* hitsLayerStart) const {
       ALPAKA_ASSERT_ACC(0 == hhp->hitsModuleStart(0));
 
-      cms::alpakatools::for_each_element_in_grid(acc, 11, [&](uint32_t i) {
+      cms::alpakatools::for_each_element_in_grid(acc, geometry->m_nLayers + 1, [&](uint32_t i) {
         hitsLayerStart[i] = hhp->hitsModuleStart(geometry->m_layers[i].layerStarts);
 #ifdef GPU_DEBUG
         printf("LayerStart %d %d: %d\n", i, geometry->m_layers[i].layerStarts, hitsLayerStart[i]);
@@ -348,6 +348,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       //auto first = threadIdx.x + blockIdx.x * blockDim.x;
       //for (int idx = first, nt = (*nCells); idx < nt; idx += gridDim.x * blockDim.x) {
+      // printf("nCells = %d\n",*nCells);
       cms::alpakatools::for_each_element_in_grid_strided(acc, (*nCells), [&](uint32_t idx) {
         auto const &thisCell = cells[idx];
         if (thisCell.theDoubletId >= 0) {  // cut by earlyFishbone

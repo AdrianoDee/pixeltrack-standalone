@@ -14,27 +14,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   public:
     CAGeometry(std::string const &path)
     {
-      // std::ifstream in(path, std::ios::binary);
-      // in.exceptions(std::ifstream::badbit | std::ifstream::failbit | std::ifstream::eofbit);
-      
-      // // Reading Modules
-      // unsigned int nModules;
-      // in.read(reinterpret_cast<char *>(&nModules), sizeof(unsigned int));
-      // m_caModules.resize(nModules);
-      // in.read(reinterpret_cast<char *>(m_caModules.data()), nModules * sizeof(caGeometry::CAModules));
-
-      // // Reading Layers
-      // unsigned int nLayers;
-      // in.read(reinterpret_cast<char *>(&nLayers), sizeof(unsigned int));
-      // m_caLayers.resize(nLayers);
-      // in.read(reinterpret_cast<char *>(m_caLayers.data()), nLayers * sizeof(caGeometry::CALayer));
-
-      // // Reading Pairs
-      // unsigned int nPairs;
-      // in.read(reinterpret_cast<char *>(&nPairs), sizeof(unsigned int));
-      // m_caPairs.resize(nPairs);
-      // in.read(reinterpret_cast<char *>(m_caPairs.data()), nPairs * sizeof(caGeometry::CAPair));
-      std::cout << "Building CA Geometry" << std::endl;
+  
+      // std::cout << "Building CA Geometry" << std::endl;
       std::ifstream in(path, std::ios::binary);
       if (!in) {
           throw std::runtime_error("Failed to open file: " + path);

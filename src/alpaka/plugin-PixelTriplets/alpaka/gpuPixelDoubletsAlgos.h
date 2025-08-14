@@ -37,6 +37,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         TrackingRecHit2DSoAView const& __restrict__ hh,
         GPUCACell::OuterHitOfCell* isOuterHitOfCell,
         PhiHist const* hist,
+        uint32_t const* __restrict__ offsets,
         caGeometry::CAGeometrySoA const* geometry,
         // int16_t const* __restrict__ phicuts,
         // float const* __restrict__ minz,
@@ -61,7 +62,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       
       bool isOuterLadder = ideal_cond;
 
-      uint32_t const* __restrict__ offsets = hh.hitsLayerStart();
       ALPAKA_ASSERT_ACC(offsets);
 
       auto layerSize = [=](uint8_t li) { return offsets[li + 1] - offsets[li]; };
@@ -122,21 +122,22 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto i = (0 == pairLayerId) ? j : j - innerLayerCumulativeSize[pairLayerId - 1];
         i += offsets[inner];
 
-        // printf("Hit in Layer %d %d %d %d\n", i, inner, pairLayerId, j);
+        // printf("Hit in Layer %d %d %d %d %d\n", i, inner, pairLayerId, j, hoff);
 
         ALPAKA_ASSERT_ACC(i >= offsets[inner]);
         ALPAKA_ASSERT_ACC(i < offsets[inner + 1]);
 
         // found hit corresponding to our cuda thread, now do the job
         auto mi = hh.detectorIndex(i);
-        if (mi > 2000)
+        if (mi > geometry->m_nModules)
           continue;  // invalid
 
-        /* maybe clever, not effective when zoCut is on
-      auto bpos = (mi%8)/4;  // if barrel is 1 for z>0
-      auto fpos = (outer>3) & (outer<7);
-      if ( ((inner<3) & (outer>3)) && bpos!=fpos) continue;
-      */
+        /* 
+        maybe clever, not effective when zoCut is on
+        auto bpos = (mi%8)/4;  // if barrel is 1 for z>0
+        auto fpos = (outer>3) & (outer<7);
+        if ( ((inner<3) & (outer>3)) && bpos!=fpos) continue;
+        */
 
         auto mez = hh.zGlobal(i);
 
@@ -203,7 +204,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto kh = PhiHist::bin(int16_t(mep + iphicut));
         auto incr = [](auto& k) { return k = (k + 1) % PhiHist::nbins(); };
         // bool piWrap = std::abs(kh-kl) > Hist::nbins()/2;
-
 #ifdef GPU_DEBUG
         int tot = 0;
         int nmin = 0;
@@ -225,16 +225,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           //for (; p < e; p += blockDimensionX) {
           uint32_t firstElementIdxX = firstElementIdxNoStrideX;
           uint32_t endElementIdxX = endElementIdxNoStrideX;
+          // printf("%d %d %ld\n",__LINE__,firstElementIdxX,maxpIndex);
+
           for (uint32_t pIndex = firstElementIdxX; pIndex < maxpIndex; ++pIndex) {
             if (not cms::alpakatools::next_valid_element_index_strided(
                     pIndex, firstElementIdxX, endElementIdxX, blockDimensionX, maxpIndex))
               break;
 
             auto oi = p[pIndex];  // auto oi = __ldg(p); is not allowed since __ldg is device-only
+          
             ALPAKA_ASSERT_ACC(oi >= offsets[outer]);
             ALPAKA_ASSERT_ACC(oi < offsets[outer + 1]);
             auto mo = hh.detectorIndex(oi);
-            if (mo > 2000)
+            if (mo > geometry->m_nModules)
               continue;  //    invalid
 
             if (doZ0Cut && z0cutoff(oi))
@@ -258,7 +261,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             // int layerPairId, int doubletId, int innerHitId, int outerHitId)
             cells[ind].init(*cellNeighbors, *cellTracks, hh, pairLayerId, ind, inner, outer, i, oi);
 
-            //printf("cell %d pairLayerId = %d i = %d oi = %d inner = %d outer = %d \n", ind, pairLayerId, i, oi, inner, outer);
+            // printf("cell %d pairLayerId = %d i = %d oi = %d inner = %d outer = %d \n", ind, pairLayerId, i, oi, inner, outer);
             
             isOuterHitOfCell[oi].push_back(acc, ind);
 #ifdef GPU_DEBUG

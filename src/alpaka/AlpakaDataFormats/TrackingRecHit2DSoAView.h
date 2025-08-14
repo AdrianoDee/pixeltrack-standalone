@@ -76,14 +76,8 @@ public:
 
   ALPAKA_FN_ACC ALPAKA_FN_INLINE pixelCPEforGPU::ParamsOnGPU const& cpeParams() const { return *m_cpeParams; }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t const* hitsModuleStarts() const { return m_hitsLayerStart; }
+  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t const* hitsModuleStarts() const { return m_hitsModuleStart; }
   ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t hitsModuleStart(int i) const { return m_hitsModuleStart[i]; }
-
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t* hitsLayerStart() { return m_hitsLayerStart; }
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t const* hitsLayerStart() const { return m_hitsLayerStart; }
-
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE Hist& phiBinner() { return *m_hist; }
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE Hist const& phiBinner() const { return *m_hist; }
 
   ALPAKA_FN_ACC ALPAKA_FN_INLINE AverageGeometry& averageGeometry() { return *m_averageGeometry; }
   ALPAKA_FN_ACC ALPAKA_FN_INLINE AverageGeometry const& averageGeometry() const { return *m_averageGeometry; }
@@ -114,10 +108,6 @@ private:
   AverageGeometry* m_averageGeometry;  // owned (corrected for beam spot: not sure where to host it otherwise)
   pixelCPEforGPU::ParamsOnGPU const* m_cpeParams;  // forwarded from setup, NOT owned
   uint32_t const* m_hitsModuleStart;               // forwarded from clusters
-
-  uint32_t* m_hitsLayerStart;
-
-  Hist* m_hist;
 
   uint32_t m_nHits;
 };

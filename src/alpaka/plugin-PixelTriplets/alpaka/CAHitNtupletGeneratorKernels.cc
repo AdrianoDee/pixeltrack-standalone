@@ -17,25 +17,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                  caGeometry::CAGeometrySoA const* geometry,
                                                  Queue &queue) {
     
-    const auto oneBlockWorkDiv = cms::alpakatools::make_workdiv<Acc1D>(1u, this->m_Layers);
+    const auto oneBlockWorkDiv = cms::alpakatools::make_workdiv<Acc1D>(1u, this->m_Layers + 1);
     alpaka::enqueue(
         queue,
         alpaka::createTaskKernel<Acc1D>(
             oneBlockWorkDiv, setHitsLayerStart(), hits_d.view(), geometry, this->device_layerStarts_.data()));
-            
-    // const auto workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(1, ll.metadata().size() - 1);
-    // alpaka::exec<Acc1D>(queue, workDiv1D, SetHitsLayerStart{}, mm, ll, this->device_layerStarts_->data());
 
-    cms::alpakatools::fillManyFromVector<Acc1D>(this->device_hitHist_.data(), this->m_Layers, hits_d.c_iphi(), hits_d.c_hitsLayerStart(), hits_d.nHits(), 256, queue);
+    // std::cout << "this->m_Layers " << this->m_Layers << " - " << hits_d.nHits() << std::endl;
 
-    // cms::alpakatools::fillManyFromVector<Acc1D>(device_hitPhiHist_->data(),
-    //                                             device_hitPhiView_,
-    //                                             TrackerTraits::numberOfLayers,  // could be ll.metadata().size() - 1
-    //                                             hh.iphi(),
-    //                                             this->device_layerStarts_->data(),
-    //                                             hh.metadata().size(),
-    //                                             (uint32_t)256,
-    //                                             queue);
+    cms::alpakatools::fillManyFromVector<Acc1D>(this->device_hitHist_.data(), this->m_Layers, hits_d.c_iphi(), this->device_layerStarts_.data(), hits_d.nHits(), 256, queue);
 
 #ifdef GPU_DEBUG
     alpaka::wait(queue);
@@ -292,6 +282,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                     device_isOuterHitOfCell_.data(),
                                                     device_hitHist_.data(),
                                                     // nActualPairs,
+                                                    device_layerStarts_.data(),
                                                     geometry,
                                                     m_params.idealConditions_,
                                                     m_params.doClusterCut_,
