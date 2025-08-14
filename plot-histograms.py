@@ -5,9 +5,12 @@ import sys
 import copy
 import glob
 import collections
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+import argparse
 
 class Plot:
     def __init__(self, xlabel, ylabel):
@@ -94,6 +97,15 @@ class Histo:
     def values(self):
         return self._data
 
+def only_tracks(name):
+    return name.startswith("track_")
+
+def only_vertices(name):
+    return name.startswith("vertex_")
+
+def only_trackvtx(name):
+    return only_tracks(name) or only_vertices(name)
+
 def ratioHisto(num, den):
     ret = copy.copy(num)
     def div(n, d):
@@ -172,7 +184,7 @@ def makePlot(histos, output=None, *args, **kwargs):
         #fig.savefig(output+".pdf")
     plt.close(fig)
 
-def makePlots(histoData, labels, histoFilter=None, **kwargs):
+def makePlots(histoData, labels, outdir, histoFilter=None, **kwargs):
     for histoName, histos in histoData.items():
         if histoFilter is not None and not histoFilter(histoName):
             continue
@@ -181,9 +193,9 @@ def makePlots(histoData, labels, histoFilter=None, **kwargs):
             print("{} {}".format(label, str(histos[label])))
             histoLabels.append( (histos[label], label) )
         p = plots[histoName]
-        makePlot(histoLabels, output=histoName, xlabel=p.xlabel(), ylabel=p.ylabel(), **kwargs)
+        makePlot(histoLabels, output=outdir + "/" + histoName, xlabel=p.xlabel(), ylabel=p.ylabel(), **kwargs)
 
-def makeRatioPlots(histoData, denomLabel, numLabels, histoFilter=None, **kwargs):
+def makeRatioPlots(histoData, denomLabel, numLabels, outdir, histoFilter=None, **kwargs):
     for histoName, histos in histoData.items():
         if histoFilter is not None and not histoFilter(histoName):
             continue
@@ -191,7 +203,7 @@ def makeRatioPlots(histoData, denomLabel, numLabels, histoFilter=None, **kwargs)
         denom = histos[denomLabel]
         ratioHistoLabels = [ (ratio(histos[num], denom), num+"/"+denomLabel) for num in numLabels]
         p = plots[histoName]
-        makePlot(ratioHistoLabels, output=histoName+"_ratio", fillAx=fillAxDot, xlabel=p.xlabel(), ylabel=p.ylabel(), skipColors=1, **kwargs)
+        makePlot(ratioHistoLabels, output=outdir + "/" + histoName + "_ratio", fillAx=fillAxDot, xlabel=p.xlabel(), ylabel=p.ylabel(), skipColors=1, **kwargs)
 
 def makeManyRatioPlots(histoData, denomLabel, numLabels, **kwargs):
     for histoName, histos in histoData.items():
@@ -223,9 +235,76 @@ def readHistograms(files):
                 #break
     return histos
 
-histoData = readHistograms(glob.glob("histograms_*.txt"))
-makePlots(histoData, ["cuda", "kokkos_cuda"], log=True)
-makeRatioPlots(histoData, "cuda", ["kokkos_cuda"], ylim=dict())
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Plot histograms from text files. "
+                    "First file is the reference for ratio plots."
+    )
+    parser.add_argument(
+        "files",
+        metavar="histogram_file",
+        nargs="+",
+        help="Histogram text files in the format 'histograms_<label>.txt'. "
+             "First one is the reference."
+    )
+    parser.add_argument(
+        "--log",
+        action="store_true",
+        help="Use log scale for the y-axis in plots."
+    )
+
+    parser.add_argument(
+        "--no-local-reco",
+        action="store_true",
+        help="Plot only track and vertices plots."
+    )
+
+    parser.add_argument(
+        "--ylim",
+        type=float,
+        nargs=2,
+        metavar=("YMIN", "YMAX"),
+        help="Set y-axis limits for ratio plots."
+    )
+
+    parser.add_argument(
+        "--output-dir",
+        default="plots",
+        help="Directory where plots will be saved (default: plots/)"
+    )
+    
+    args = parser.parse_args()
+
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    histoData = readHistograms(args.files)
+
+    label_re = re.compile(r"histograms_(?P<label>.*)\.txt")
+    labels = []
+    for f in args.files:
+        m = label_re.search(f)
+        if not m:
+            parser.error(f"{f} does not match expected format 'histograms_<label>.txt'")
+        labels.append(m.group("label"))
+
+    ref_label = labels[0]
+    other_labels = labels[1:]
+
+    histoFilter = None if not args.no_local_reco else only_trackvtx
+    # Make plots for all
+    makePlots(histoData, labels, log=args.log, outdir = args.output_dir, histoFilter = histoFilter)
+
+    ylim_dict = dict()
+    if args.ylim:
+        ylim_dict = dict(ymin=args.ylim[0], ymax=args.ylim[1])
+
+    makeRatioPlots(histoData, ref_label, other_labels, ylim=ylim_dict, outdir = args.output_dir, histoFilter = histoFilter)
+
+# histoData = readHistograms(glob.glob("histograms_*.txt"))
+# makePlots(histoData, ["baseline", "baseline_2", "0dd4e43","5a514d0"], log=True)
+# makeRatioPlots(histoData, "baseline", ["baseline_2", "0dd4e43","5a514d0"], ylim=dict())
+
 
 #makeManyRatioPlots(histoData, "cuda", dict(
 #    cuda = ["cuda_{}".format(i) for i in range(0,100)],
