@@ -9,6 +9,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   void HelixFitOnGPU::launchRiemannKernels(HitsView const* hv,
                                            uint32_t nhits,
                                            uint32_t maxNumberOfTuples,
+                                           caGeometry::CAGeometrySoA const* geometry,
                                            Queue& queue) {
     ALPAKA_ASSERT_ACC(tuples_d);
 
@@ -40,6 +41,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                       hitsGPU_.data(),
                                                       hits_geGPU_.data(),
                                                       fast_fit_resultsGPU_.data(),
+                                                      geometry,
                                                       offset));
 
       alpaka::enqueue(queue,
@@ -78,6 +80,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                       hitsGPU_.data(),
                                                       hits_geGPU_.data(),
                                                       fast_fit_resultsGPU_.data(),
+                                                      geometry,
                                                       offset));
 
       alpaka::enqueue(queue,
@@ -117,6 +120,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                         hitsGPU_.data(),
                                                         hits_geGPU_.data(),
                                                         fast_fit_resultsGPU_.data(),
+                                                        geometry,
                                                         offset));
 
         alpaka::enqueue(queue,
@@ -155,6 +159,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                         hitsGPU_.data(),
                                                         hits_geGPU_.data(),
                                                         fast_fit_resultsGPU_.data(),
+                                                        geometry,
                                                         offset));
 
         alpaka::enqueue(queue,

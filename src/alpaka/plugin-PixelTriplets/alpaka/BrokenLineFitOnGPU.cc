@@ -9,6 +9,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   void HelixFitOnGPU::launchBrokenLineKernels(HitsView const* hv,
                                               uint32_t hitsInFit,
                                               uint32_t maxNumberOfTuples,
+                                              caGeometry::CAGeometrySoA const* geometry,
                                               Queue& queue) {
     ALPAKA_ASSERT_ACC(tuples_d);
 
@@ -33,6 +34,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                       tuples_d,
                                                       tupleMultiplicity_d,
                                                       hv,
+                                                      geometry,
                                                       hitsGPU_.data(),
                                                       hits_geGPU_.data(),
                                                       fast_fit_resultsGPU_.data(),
@@ -58,6 +60,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                       tuples_d,
                                                       tupleMultiplicity_d,
                                                       hv,
+                                                      geometry,
                                                       hitsGPU_.data(),
                                                       hits_geGPU_.data(),
                                                       fast_fit_resultsGPU_.data(),
@@ -84,6 +87,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                         tuples_d,
                                                         tupleMultiplicity_d,
                                                         hv,
+                                                        geometry,
                                                         hitsGPU_.data(),
                                                         hits_geGPU_.data(),
                                                         fast_fit_resultsGPU_.data(),
@@ -109,6 +113,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                         tuples_d,
                                                         tupleMultiplicity_d,
                                                         hv,
+                                                        geometry,
                                                         hitsGPU_.data(),
                                                         hits_geGPU_.data(),
                                                         fast_fit_resultsGPU_.data(),

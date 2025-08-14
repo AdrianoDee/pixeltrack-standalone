@@ -11,6 +11,7 @@
 #include "AlpakaCore/config.h"
 #include "AlpakaDataFormats/alpaka/TrackingRecHit2DAlpaka.h"
 #include "CondFormats/pixelCPEforGPU.h"
+#include "CondFormats/alpaka/CAGeometry.h"
 
 #include "HelixFitOnGPU.h"
 #include "RiemannFit.h"
@@ -32,6 +33,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                   double *__restrict__ phits,
                                   float *__restrict__ phits_ge,
                                   double *__restrict__ pfast_fit,
+                                  caGeometry::CAGeometrySoA const* geometry,
                                   uint32_t offset) const {
       constexpr uint32_t hitsInFit = N;
 
@@ -71,9 +73,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           auto hit = hitId[i];
           // printf("Hit global: %f,%f,%f\n", hhp->xg_d[hit],hhp->yg_d[hit],hhp->zg_d[hit]);
           float ge[6];
-          hhp->cpeParams()
-              .detParams(hhp->detectorIndex(hit))
-              .frame.toGlobal(hhp->xerrLocal(hit), 0, hhp->yerrLocal(hit), ge);
+          // hhp->cpeParams()
+          //     .detParams(hhp->detectorIndex(hit))
+          //     .frame.toGlobal(hhp->xerrLocal(hit), 0, hhp->yerrLocal(hit), ge);
+          geometry->m_modules[hhp->detectorIndex(hit)].toGlobal(hhp->xerrLocal(hit), 0, hhp->yerrLocal(hit), ge);
           // printf("Error: %d: %f,%f,%f,%f,%f,%f\n",hhp->detInd_d[hit],ge[0],ge[1],ge[2],ge[3],ge[4],ge[5]);
 
           hits.col(i) << hhp->xGlobal(hit), hhp->yGlobal(hit), hhp->zGlobal(hit);

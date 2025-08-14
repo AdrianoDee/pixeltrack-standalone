@@ -4,6 +4,7 @@
 #include "AlpakaCore/config.h"
 #include "AlpakaDataFormats/alpaka/PixelTrackAlpaka.h"
 #include "AlpakaDataFormats/alpaka/TrackingRecHit2DAlpaka.h"
+#include "CondFormats/alpaka/CAGeometry.h"
 
 #include "../CAConstants.h"
 #include "FitResult.h"
@@ -47,11 +48,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     ~HelixFitOnGPU() { deallocateOnGPU(); }
 
     void setBField(double bField) { bField_ = bField; }
-    void launchRiemannKernels(HitsView const *hv, uint32_t nhits, uint32_t maxNumberOfTuples);
-    void launchBrokenLineKernels(HitsView const *hv, uint32_t nhits, uint32_t maxNumberOfTuples);
+    void launchRiemannKernels(HitsView const *hv, uint32_t nhits, uint32_t maxNumberOfTuples, caGeometry::CAGeometrySoA const* geometry);
+    void launchBrokenLineKernels(HitsView const *hv, uint32_t nhits, uint32_t maxNumberOfTuples, caGeometry::CAGeometrySoA const* geometry);
 
-    void launchRiemannKernels(HitsView const *hv, uint32_t nhits, uint32_t maxNumberOfTuples, Queue &queue);
-    void launchBrokenLineKernels(HitsView const *hv, uint32_t nhits, uint32_t maxNumberOfTuples, Queue &queue);
+    void launchRiemannKernels(HitsView const *hv, uint32_t nhits, uint32_t maxNumberOfTuples, caGeometry::CAGeometrySoA const* geometry, Queue &queue);
+    void launchBrokenLineKernels(HitsView const *hv, uint32_t nhits, uint32_t maxNumberOfTuples, caGeometry::CAGeometrySoA const* geometry, Queue &queue);
 
     void allocateOnGPU(Tuples const *tuples, TupleMultiplicity const *tupleMultiplicity, OutputSoA *outputSoA);
     void deallocateOnGPU();

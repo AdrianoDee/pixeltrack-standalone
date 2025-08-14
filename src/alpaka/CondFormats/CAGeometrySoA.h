@@ -6,6 +6,8 @@
 #include <cstdint>
 #include "DataFormats/SOARotation.h"
 
+//TODO: make this a real SoA
+
 namespace caGeometry
 {
   using CAModule = SOAFrame<float>;

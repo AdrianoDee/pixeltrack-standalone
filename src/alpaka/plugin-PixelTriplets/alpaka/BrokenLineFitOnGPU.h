@@ -13,6 +13,7 @@
 #include "AlpakaCore/config.h"
 #include "AlpakaDataFormats/alpaka/TrackingRecHit2DAlpaka.h"
 #include "CondFormats/pixelCPEforGPU.h"
+#include "CondFormats/alpaka/CAGeometry.h"
 
 #include "BrokenLine.h"
 #include "HelixFitOnGPU.h"
@@ -32,6 +33,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                   Tuples const *__restrict__ foundNtuplets,
                                   CAConstants::TupleMultiplicity const *__restrict__ tupleMultiplicity,
                                   HitsOnGPU const *__restrict__ hhp,
+                                  caGeometry::CAGeometrySoA const* geometry,
                                   double *__restrict__ phits,
                                   float *__restrict__ phits_ge,
                                   double *__restrict__ pfast_fit,
@@ -84,9 +86,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         for (unsigned int i = 0; i < hitsInFit; ++i) {
           auto hit = hitId[i];
           float ge[6];
-          hhp->cpeParams()
-              .detParams(hhp->detectorIndex(hit))
-              .frame.toGlobal(hhp->xerrLocal(hit), 0, hhp->yerrLocal(hit), ge);
+          // hhp->cpeParams()
+          //     .detParams(hhp->detectorIndex(hit))
+          //     .frame.toGlobal(hhp->xerrLocal(hit), 0, hhp->yerrLocal(hit), ge);
+          geometry->m_modules[hhp->detectorIndex(hit)].toGlobal(hhp->xerrLocal(hit), 0, hhp->yerrLocal(hit), ge);
 #ifdef BL_DUMP_HITS
           if (dump) {
             printf("Hit global: %d: %d hits.col(%d) << %f,%f,%f\n",
