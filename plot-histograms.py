@@ -273,8 +273,16 @@ if __name__ == "__main__":
         default="plots",
         help="Directory where plots will be saved (default: plots/)"
     )
+
+    parser.add_argument(
+        "--filter",
+        help="Only plot histograms whose names match this regex."
+    )
     
     args = parser.parse_args()
+
+    if args.filter and args.no_local_reco:
+        parser.error("Options --filter and --no-local-reco cannot be used together.")
 
     os.makedirs(args.output_dir, exist_ok=True)
 
@@ -292,6 +300,10 @@ if __name__ == "__main__":
     other_labels = labels[1:]
 
     histoFilter = None if not args.no_local_reco else only_trackvtx
+    if args.filter:
+        pattern = re.compile(args.filter)
+        histoFilter = lambda name: bool(pattern.search(name))
+        
     # Make plots for all
     makePlots(histoData, labels, log=args.log, outdir = args.output_dir, histoFilter = histoFilter)
 
