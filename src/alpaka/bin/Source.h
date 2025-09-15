@@ -10,6 +10,7 @@
 
 #include "Framework/Event.h"
 #include "DataFormats/FEDRawDataCollection.h"
+#include "DataFormats/TrackingRecHitSimpleSoA.h"
 #include "DataFormats/DigiClusterCount.h"
 #include "DataFormats/TrackCount.h"
 #include "DataFormats/VertexCount.h"
@@ -18,7 +19,7 @@ namespace edm {
   class Source {
   public:
     explicit Source(
-        int maxEvents, int runForMinutes, ProductRegistry& reg, std::filesystem::path const& datadir, bool validation);
+        int maxEvents, int runForMinutes, ProductRegistry& reg, std::filesystem::path const& datadir, bool validation, bool fromHits);
 
     void reconfigure(int maxEvents, int runForMinutes);
     void startProcessing();
@@ -40,15 +41,25 @@ namespace edm {
     std::atomic<bool> shouldStop_ = false;
 
     std::atomic<int> numEvents_ = 0;
-    EDPutTokenT<FEDRawDataCollection> const rawToken_;
+    
+    EDPutTokenT<FEDRawDataCollection> rawToken_;
+    EDPutTokenT<TrackingRecHitSimpleSoA> hitToken_;
+
     EDPutTokenT<DigiClusterCount> digiClusterToken_;
     EDPutTokenT<TrackCount> trackToken_;
     EDPutTokenT<VertexCount> vertexToken_;
+
     std::vector<FEDRawDataCollection> raw_;
+    std::vector<TrackingRecHitSimpleSoA> hits_;
+
     std::vector<DigiClusterCount> digiclusters_;
     std::vector<TrackCount> tracks_;
     std::vector<VertexCount> vertices_;
+
     bool const validation_;
+    // boostrapping
+    bool const fromHits_;
+
   };
 }  // namespace edm
 

@@ -24,16 +24,38 @@ namespace {
     return rawCollection;
   }
 
+  TrackingRecHitSimpleSoA readHits(std::istream& is, unsigned int nHits) {
+
+    TrackingRecHitSimpleSoA hitSoA(nHits);
+
+    hitSoA.readBinary(is);
+    
+    return hitSoA;
+  }
+
 }  // namespace
 
 namespace edm {
   Source::Source(
-      int maxEvents, int runForMinutes, ProductRegistry &reg, std::filesystem::path const &datadir, bool validation)
+      int maxEvents, int runForMinutes, ProductRegistry &reg, std::filesystem::path const &datadir, bool validation, bool fromHits)
       : maxEvents_(maxEvents),
         runForMinutes_(runForMinutes),
-        rawToken_(reg.produces<FEDRawDataCollection>()),
-        validation_(validation) {
-    std::ifstream in_raw(datadir / "raw.bin", std::ios::binary);
+        validation_(validation),
+        fromHits_(fromHits) {
+    
+    
+    std::ifstream in_raw;
+
+    if (not fromHits_)
+    {
+      in_raw.open(datadir / "raw.bin", std::ios::binary);
+      rawToken_ = reg.produces<FEDRawDataCollection>();
+    }
+    else
+    {
+      in_raw.open(datadir / "hits.bin", std::ios::binary);
+      hitToken_ = reg.produces<TrackingRecHitSimpleSoA>();
+    }
     std::ifstream in_digiclusters;
     std::ifstream in_tracks;
     std::ifstream in_vertices;
@@ -57,8 +79,10 @@ namespace edm {
     while (not in_raw.eof()) {
       in_raw.exceptions(std::ifstream::badbit | std::ifstream::failbit | std::ifstream::eofbit);
 
-      raw_.emplace_back(readRaw(in_raw, nfeds));
-
+      if (not fromHits_)
+        raw_.emplace_back(readRaw(in_raw, nfeds));
+      else
+        hits_.emplace_back(readHits(in_raw, nfeds)); //READ HITS
       if (validation_) {
         unsigned int nm, nd, nc, nt, nv;
         in_digiclusters.read(reinterpret_cast<char *>(&nm), sizeof(unsigned int));
@@ -135,7 +159,10 @@ namespace edm {
     auto ev = std::make_unique<Event>(streamId, iev, reg);
     const int index = old % raw_.size();
 
-    ev->emplace(rawToken_, raw_[index]);
+    if (not fromHits_)
+      ev->emplace(rawToken_, raw_[index]);
+    else 
+      ev->emplace(hitToken_, hits_[index]);
     if (validation_) {
       ev->emplace(digiClusterToken_, digiclusters_[index]);
       ev->emplace(trackToken_, tracks_[index]);

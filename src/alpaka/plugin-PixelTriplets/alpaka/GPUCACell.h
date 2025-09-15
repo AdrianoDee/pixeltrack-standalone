@@ -10,6 +10,8 @@
 #include <cmath>
 #include <limits>
 
+#include <boost/preprocessor/repetition/repeat.hpp>
+
 #include "AlpakaCore/SimpleVector.h"
 #include "AlpakaCore/VecArray.h"
 #include "AlpakaCore/config.h"
@@ -277,58 +279,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         return false;
 
       return std::abs(eq.dca0()) < region_origin_radius_plus_tolerance * std::abs(eq.curvature());
-    }
-
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool hole0(Hits const& hh, GPUCACell const& innerCell) const {
-      constexpr uint32_t max_ladder_bpx0 = 12;
-      constexpr uint32_t first_ladder_bpx0 = 0;
-      constexpr float module_length = 6.7f;
-      constexpr float module_tolerance = 0.4f;  // projection to cylinder is inaccurate on BPIX1
-      int p = innerCell.get_inner_iphi(hh);
-      if (p < 0)
-        p += std::numeric_limits<unsigned short>::max();
-      p = (max_ladder_bpx0 * p) / std::numeric_limits<unsigned short>::max();
-      p %= max_ladder_bpx0;
-      auto il = first_ladder_bpx0 + p;
-      auto r0 = hh.averageGeometry().ladderR[il];
-      auto ri = innerCell.get_inner_r(hh);
-      auto zi = innerCell.get_inner_z(hh);
-      auto ro = get_outer_r(hh);
-      auto zo = get_outer_z(hh);
-      auto z0 = zi + (r0 - ri) * (zo - zi) / (ro - ri);
-      auto z_in_ladder = std::abs(z0 - hh.averageGeometry().ladderZ[il]);
-      auto z_in_module = z_in_ladder - module_length * int(z_in_ladder / module_length);
-      auto gap = z_in_module < module_tolerance || z_in_module > (module_length - module_tolerance);
-      return gap;
-    }
-
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool hole4(Hits const& hh, GPUCACell const& innerCell) const {
-      constexpr uint32_t max_ladder_bpx4 = 64;
-      constexpr uint32_t first_ladder_bpx4 = 84;
-      // constexpr float radius_even_ladder = 15.815f;
-      // constexpr float radius_odd_ladder = 16.146f;
-      constexpr float module_length = 6.7f;
-      constexpr float module_tolerance = 0.2f;
-      // constexpr float barrel_z_length = 26.f;
-      // constexpr float forward_z_begin = 32.f;
-      int p = get_outer_iphi(hh);
-      if (p < 0)
-        p += std::numeric_limits<unsigned short>::max();
-      p = (max_ladder_bpx4 * p) / std::numeric_limits<unsigned short>::max();
-      p %= max_ladder_bpx4;
-      auto il = first_ladder_bpx4 + p;
-      auto r4 = hh.averageGeometry().ladderR[il];
-      auto ri = innerCell.get_inner_r(hh);
-      auto zi = innerCell.get_inner_z(hh);
-      auto ro = get_outer_r(hh);
-      auto zo = get_outer_z(hh);
-      auto z4 = zo + (r4 - ro) * (zo - zi) / (ro - ri);
-      auto z_in_ladder = std::abs(z4 - hh.averageGeometry().ladderZ[il]);
-      auto z_in_module = z_in_ladder - module_length * int(z_in_ladder / module_length);
-      auto gap = z_in_module < module_tolerance || z_in_module > (module_length - module_tolerance);
-      auto holeP = z4 > hh.averageGeometry().ladderMaxZ[il] && z4 < hh.averageGeometry().endCapZ[0];
-      auto holeN = z4 < hh.averageGeometry().ladderMinZ[il] && z4 > hh.averageGeometry().endCapZ[1];
-      return gap || holeP || holeN;
     }
 
     // trying to free the track building process from hardcoded layers, leaving

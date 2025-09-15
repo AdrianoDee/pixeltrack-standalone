@@ -38,7 +38,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                                pixelCPEforGPU::ParamsOnGPU const* cpeParams,
                                                                Queue& queue) const {
       auto nHits = clusters_d.nClusters();
-      TrackingRecHit2DAlpaka hits_d(nHits, cpeParams, clusters_d.clusModuleStart(), queue);
+      TrackingRecHit2DAlpaka hits_d(nHits, clusters_d.clusModuleStart(), queue);
 
       const int threadsPerBlockOrElementsPerThread = 128;
       const int blocks = digis_d.nModules();  // active modules (with digis)

@@ -86,9 +86,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         for (unsigned int i = 0; i < hitsInFit; ++i) {
           auto hit = hitId[i];
           float ge[6];
-          // hhp->cpeParams()
-          //     .detParams(hhp->detectorIndex(hit))
-          //     .frame.toGlobal(hhp->xerrLocal(hit), 0, hhp->yerrLocal(hit), ge);
+
           geometry->m_modules[hhp->detectorIndex(hit)].toGlobal(hhp->xerrLocal(hit), 0, hhp->yerrLocal(hit), ge);
 #ifdef BL_DUMP_HITS
           if (dump) {

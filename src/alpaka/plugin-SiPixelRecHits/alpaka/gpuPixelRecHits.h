@@ -8,6 +8,7 @@
 #include <limits>
 
 #include "AlpakaCore/config.h"
+#include "AlpakaCore/workdivision.h"
 #include "AlpakaDataFormats/alpaka/BeamSpotAlpaka.h"
 #include "AlpakaDataFormats/alpaka/TrackingRecHit2DAlpaka.h"
 #include "CondFormats/pixelCPEforGPU.h"
@@ -38,26 +39,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
         const uint32_t blockIdx(alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[0u]);
         const uint32_t threadIdxLocal(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[0u]);
-
-        // copy average geometry corrected by beamspot . FIXME (move it somewhere else???)
-        if (0 == blockIdx) {
-          auto& agc = hits.averageGeometry();
-          auto const& ag = cpeParams->averageGeometry();
-          constexpr auto numberOfLaddersInBarrel = TrackingRecHit2DSoAView::AverageGeometry::numberOfLaddersInBarrel;
-          cms::alpakatools::for_each_element_in_block_strided(acc, numberOfLaddersInBarrel, [&](uint32_t il) {
-            agc.ladderX[il] = ag.ladderX[il] - bs->x;
-            agc.ladderY[il] = ag.ladderY[il] - bs->y;
-            agc.ladderZ[il] = ag.ladderZ[il] - bs->z;
-            agc.ladderR[il] = sqrt(agc.ladderX[il] * agc.ladderX[il] + agc.ladderY[il] * agc.ladderY[il]);
-            agc.ladderMinZ[il] = ag.ladderMinZ[il] - bs->z;
-            agc.ladderMaxZ[il] = ag.ladderMaxZ[il] - bs->z;
-          });
-          if (threadIdxLocal == 0) {
-            agc.endCapZ[0] = ag.endCapZ[0] - bs->z;
-            agc.endCapZ[1] = ag.endCapZ[1] - bs->z;
-            //printf("endcapZ %f %f\n",agc.endCapZ[0],agc.endCapZ[1]);
-          }
-        }
 
         // to be moved in common namespace...
         constexpr uint16_t InvId = 9999;  // must be > MaxNumModules

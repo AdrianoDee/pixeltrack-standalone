@@ -33,6 +33,42 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   using TkSoA = pixelTrack::TrackSoA;
   using HitContainer = pixelTrack::HitContainer;
 
+
+//   template<int N, typename TAcc>
+//   ALPAKA_FN_ACC ALPAKA_FN_INLINE void call_find_ntuplets(const TAcc& acc,
+//                           GPUCACell const *__restrict__ thisCell,
+//                           GPUCACell::Hits const *__restrict__ hhp,
+//                           GPUCACell *__restrict__ cells,
+//                           gpuPixelDoublets::CellTracksVector *cellTracks,
+//                           HitContainer *foundNtuplets,
+//                           cms::alpakatools::AtomicPairCounter *apc,
+//                           Quality *__restrict__ quality,
+//                           const unsigned int minHitsPerNtuplet) {
+//       auto pid = thisCell->theLayerPairId;
+//       auto const &hh = *hhp;
+//       GPUCACell::TmpTuple stack;
+//       stack.reset();
+//       thisCell->find_ntuplets<N>(
+//                 acc, hh, cells, *cellTracks, *foundNtuplets, *apc, quality, stack, minHitsPerNtuplet, pid < 3);
+//       ALPAKA_ASSERT_ACC(stack.empty());
+//   }
+
+//   using call_find_ntuplets_type = void(*)(
+//       const TAcc&,
+//       GPUCACell const *__restrict__,
+//       GPUCACell::Hits const *__restrict__,
+//       GPUCACell *__restrict__,
+//       gpuPixelDoublets::CellTracksVector *,
+//       HitContainer *,
+//       cms::alpakatools::AtomicPairCounter *,
+//       Quality *__restrict__,
+//       const unsigned int
+//   );
+
+//   constexpr call_find_ntuplets_type table[] = {
+//     BOOST_PP_REPEAT(COUNT, GENERATE_CALL, ~)
+// };
+
   struct setHitsLayerStart {
     template <typename TAcc>
     ALPAKA_FN_ACC void operator()(const TAcc& acc,
@@ -356,9 +392,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           auto pid = thisCell.theLayerPairId;
           auto doit = minHitsPerNtuplet > 3 ? pid < 3 : pid < 8 || pid > 12;
           if (doit) {
+            // call_find_ntuplets<6>(acc, &thisCell, hhp, cells, cellTracks, foundNtuplets, apc, quality, minHitsPerNtuplet);
             GPUCACell::TmpTuple stack;
             stack.reset();
-            thisCell.find_ntuplets<6>(
+            thisCell.find_ntuplets<10>(
                 acc, hh, cells, *cellTracks, *foundNtuplets, *apc, quality, stack, minHitsPerNtuplet, pid < 3);
             ALPAKA_ASSERT_ACC(stack.empty());
             // printf("in %d found quadruplets: %d\n", cellIndex, apc->get());

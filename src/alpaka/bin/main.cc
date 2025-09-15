@@ -131,6 +131,7 @@ int main(int argc, char** argv) {
   bool validation = false;
   bool histogram = false;
   bool empty = false;
+  bool fromHits = false;
   for (auto i = args.begin() + 1, e = args.end(); i != e; ++i) {
     if (*i == "-h" or *i == "--help") {
       print_help(args.front());
@@ -176,6 +177,8 @@ int main(int argc, char** argv) {
     } else if (*i == "--validation") {
       transfer = true;
       validation = true;
+    } else if (*i == "--fromHits") {
+      fromHits = true;
     } else if (*i == "--histogram") {
       transfer = true;
       histogram = true;
@@ -298,7 +301,8 @@ int main(int argc, char** argv) {
                                 std::move(alternatives),
                                 std::move(esmodules),
                                 datadir,
-                                validation);
+                                validation,
+                                fromHits);
 
   if (runForMinutes < 0) {
     std::cout << "Processing " << processor.maxEvents() << " events,";

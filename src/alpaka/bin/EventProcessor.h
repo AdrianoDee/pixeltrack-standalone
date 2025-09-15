@@ -34,7 +34,7 @@ namespace edm {
                             Alternatives alternatives,
                             std::vector<std::string> const& esproducers,
                             std::filesystem::path const& datadir,
-                            bool validation);
+                            bool validation, bool fromHits);
 
     int maxEvents() const { return source_.maxEvents(); }
     int processedEvents() const { return source_.processedEvents(); }

@@ -2,7 +2,6 @@
 #define AlpakaDataFormats_TrackingRecHit2DSoAView_h
 
 #include "AlpakaDataFormats/gpuClusteringConstants.h"
-#include "AlpakaCore/HistoContainer.h"
 #include "Geometry/phase1PixelTopology.h"
 
 namespace pixelCPEforGPU {
@@ -28,10 +27,7 @@ namespace alpaka_serial_sync {
 class TrackingRecHit2DSoAView {
 public:
   static constexpr uint32_t maxHits() { return gpuClustering::MaxNumClusters; }
-  using hindex_type = uint16_t;  // if above is <=2^16
-
-  using Hist =
-      cms::alpakatools::HistoContainer<int16_t, 128, gpuClustering::MaxNumClusters, 8 * sizeof(int16_t), uint16_t, 50>; //TODO make this templated
+  using hindex_type = uint32_t;  // if above is <=2^16
 
   using AverageGeometry = phase1PixelTopology::AverageGeometry;
 
@@ -74,14 +70,8 @@ public:
   ALPAKA_FN_ACC ALPAKA_FN_INLINE uint16_t& detectorIndex(int i) { return m_detInd[i]; }
   ALPAKA_FN_ACC ALPAKA_FN_INLINE uint16_t detectorIndex(int i) const { return m_detInd[i]; }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE pixelCPEforGPU::ParamsOnGPU const& cpeParams() const { return *m_cpeParams; }
-
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t const* hitsModuleStarts() const { return m_hitsModuleStart; }
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t hitsModuleStart(int i) const { return m_hitsModuleStart[i]; }
-
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE AverageGeometry& averageGeometry() { return *m_averageGeometry; }
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE AverageGeometry const& averageGeometry() const { return *m_averageGeometry; }
-
+  ALPAKA_FN_ACC ALPAKA_FN_INLINE int32_t const* hitsModuleStarts() const { return m_hitsModuleStart; }
+  ALPAKA_FN_ACC ALPAKA_FN_INLINE int32_t hitsModuleStart(int i) const { return m_hitsModuleStart[i]; }
 private:
   // TO DO: NB: added __restrict__ versus legacy
 
@@ -105,9 +95,7 @@ private:
   uint16_t* __restrict__ m_detInd;
 
   // supporting objects
-  AverageGeometry* m_averageGeometry;  // owned (corrected for beam spot: not sure where to host it otherwise)
-  pixelCPEforGPU::ParamsOnGPU const* m_cpeParams;  // forwarded from setup, NOT owned
-  uint32_t const* m_hitsModuleStart;               // forwarded from clusters
+  int32_t const* m_hitsModuleStart;               // forwarded from clusters
 
   uint32_t m_nHits;
 };
