@@ -17,20 +17,33 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   public:
 
     TrackingRecHit2DAlpaka() = delete;  // alpaka buffers are not default-constructible
-
-    explicit TrackingRecHit2DAlpaka(const TrackingRecHitSimpleSoA& simpleHits, Queue& queue)
+    
+    explicit TrackingRecHit2DAlpaka(const TrackingRecHitSimpleSoA& simpleHits, Queue& queue):
+      m_nHits(simpleHits.nHits())
     {
-      auto nHits = simpleHits.nHits();
-
       auto nModules = simpleHits.moduleStartVec().size();
-      m_store32 = cms::alpakatools::make_device_buffer<uint32_t[]>(queue, nHits * static_cast<uint32_t>(Fields32::size_) + nModules + 1);
-      m_store16 = cms::alpakatools::make_device_buffer<uint16_t[]>(queue, nHits * static_cast<uint32_t>(Fields16::size_));
+      m_store32 = cms::alpakatools::make_device_buffer<uint32_t[]>(queue, m_nHits * static_cast<uint32_t>(Fields32::size_) + nModules + 1);
+      m_store16 = cms::alpakatools::make_device_buffer<uint16_t[]>(queue, m_nHits * static_cast<uint32_t>(Fields16::size_));
 
-      // m_view = cms::alpakatools::make_device_buffer<TrackingRecHit2DSoAView>(queue);
-      // m_view_h = cms::alpakatools::make_host_buffer<TrackingRecHit2DSoAView>(queue);
+      m_view = cms::alpakatools::make_device_buffer<TrackingRecHit2DSoAView>(queue);
+      m_view_h = cms::alpakatools::make_host_buffer<TrackingRecHit2DSoAView>(queue);
 
-      // m_nHits = (*m_view_h)->m_nHits = uint32_t(simpleHits.nHits());
-      // m_hitsModuleStart =  (*m_view_h)->m_hitsModuleStart = endOf32();
+      field32ToDeviceAsync(Fields32::yl, simpleHits.xlVector().data(), m_nHits, queue);
+      field32ToDeviceAsync(Fields32::yl, simpleHits.ylVector().data(), m_nHits, queue);
+      field32ToDeviceAsync(Fields32::xerr, simpleHits.xerrVector().data(), m_nHits, queue);
+      field32ToDeviceAsync(Fields32::yerr, simpleHits.yerrVector().data(), m_nHits, queue);
+      field32ToDeviceAsync(Fields32::xg, simpleHits.xgVector().data(), m_nHits, queue);
+      field32ToDeviceAsync(Fields32::yg, simpleHits.ygVector().data(), m_nHits, queue);
+      field32ToDeviceAsync(Fields32::zg, simpleHits.zgVector().data(), m_nHits, queue);
+      field32ToDeviceAsync(Fields32::rg, simpleHits.rgVector().data(), m_nHits, queue);
+      // field16ToDeviceAsync(Fields32::iphi, simpleHits.iphiVector().data(), m_nHits, queue);
+      field32ToDeviceAsync(Fields32::charge, simpleHits.chargeVector().data(), m_nHits, queue);
+      field16ToDeviceAsync(Fields16::xsize, simpleHits.xsizeVector().data(), m_nHits, queue);
+      field16ToDeviceAsync(Fields16::ysize, simpleHits.ysizeVector().data(), m_nHits, queue);
+      field16ToDeviceAsync(Fields16::detInd, simpleHits.detIndVector().data(), m_nHits, queue);
+      
+      m_nHits = (*m_view_h)->m_nHits = uint32_t(m_nHits);
+      m_hitsModuleStart =  (*m_view_h)->m_hitsModuleStart = endOf32();
 
       // // pointers to data owned by this TrackingRecHit2DAlpaka object:
       // (*m_view_h)->m_xl     = simpleHits.xlVector().data();
@@ -47,10 +60,48 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       // (*m_view_h)->m_ysize  = simpleHits.ysizeVector().data();
       // (*m_view_h)->m_detInd = simpleHits.detIndVector().data();;
 
-      // // copy the SoA view to the device
+      // copy the SoA view to the device
       // alpaka::memcpy(queue, m_view, m_view_h);
+      alpaka::memcpy(queue, *m_view_h, *m_view);
+      alpaka::wait(queue);
 
     };
+
+    explicit TrackingRecHit2DAlpaka(
+      size_t nHits, size_t nModules,
+      const float* xl, const float* yl, const float* xerr, const float* yerr,
+      const float* xg, const float* yg, const float* zg, const float* rg, const int16_t* iphi,
+      const int32_t* charge, const int16_t* xsize, const int16_t* ysize, const int16_t* detInd,
+      const uint32_t* modStart, Queue& queue)
+      : m_nHits(nHits)
+  {
+      m_store32 = cms::alpakatools::make_device_buffer<uint32_t[]>(queue, m_nHits * static_cast<uint32_t>(Fields32::size_) + nModules + 1);
+      m_store16 = cms::alpakatools::make_device_buffer<uint16_t[]>(queue, m_nHits * static_cast<uint32_t>(Fields16::size_));
+
+      m_view = cms::alpakatools::make_device_buffer<TrackingRecHit2DSoAView>(queue);
+      m_view_h = cms::alpakatools::make_host_buffer<TrackingRecHit2DSoAView>(queue);
+      
+      field32ToDeviceAsync(Fields32::yl, xl, m_nHits, queue);
+      field32ToDeviceAsync(Fields32::yl, yl, m_nHits, queue);
+      field32ToDeviceAsync(Fields32::xerr, xerr, m_nHits, queue);
+      field32ToDeviceAsync(Fields32::yerr, yerr, m_nHits, queue);
+      field32ToDeviceAsync(Fields32::xg, xg, m_nHits, queue);
+      field32ToDeviceAsync(Fields32::yg, yg, m_nHits, queue);
+      field32ToDeviceAsync(Fields32::zg, zg, m_nHits, queue);
+      field32ToDeviceAsync(Fields32::rg, rg, m_nHits, queue);
+      field32ToDeviceAsync(Fields32::charge, charge, m_nHits, queue);
+      field16ToDeviceAsync(Fields16::xsize, xsize, m_nHits, queue);
+      field16ToDeviceAsync(Fields16::ysize, ysize, m_nHits, queue);
+      field16ToDeviceAsync(Fields16::detInd, detInd, m_nHits, queue);
+      
+
+      m_nHits = (*m_view_h)->m_nHits = uint32_t(m_nHits);
+      m_hitsModuleStart =  (*m_view_h)->m_hitsModuleStart = endOf32();
+
+      alpaka::memcpy(queue, *m_view_h, *m_view);
+      alpaka::wait(queue);
+
+  }
 
     explicit TrackingRecHit2DAlpaka(uint32_t nHits,
                                     const uint32_t* hitsModuleStart,
@@ -180,15 +231,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       return host_buffer;
     }
 
-
-    // template<typename T>
-    // auto fiel32ToDeviceAsync(Queue& queue, Fields32 field, const T* inputs) const {
-    //   auto device_view = cms::alpakatools::make_device_view(alpaka::getDev(queue), getField32<T>(field), nHits());
-    //   auto host_buffer = cms::alpakatools::make_host_buffer<int16_t[]>(queue, nHits());
-    //   alpaka::memcpy(queue, device_view, host_buffer);
-    //   return host_buffer;
-    // }
-
 #ifdef TODO
     // only the local coord and detector index
     cms::alpakatools::host_buffer<uint16_t[]> detIndexToHostAsync(Queue& queue) const;
@@ -282,6 +324,22 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     // Keep a host copy of the device view alive during the asynchronous copy
     std::optional<cms::alpakatools::host_buffer<TrackingRecHit2DSoAView>> m_view_h;
+
+  public:
+
+    template<typename T>
+    void field32ToDeviceAsync(Fields32 field, const T* inputs, unsigned int n, Queue& queue) {
+      auto device_view = cms::alpakatools::make_device_view(alpaka::getDev(queue), getField32<T>(field), n);
+      auto host_view = cms::alpakatools::make_host_view(inputs, n);
+      alpaka::memcpy(queue, device_view, host_view);
+    }
+
+    template<typename T>
+    void field16ToDeviceAsync(Fields16 field, const T* inputs, unsigned int n, Queue& queue) {
+      auto device_view = cms::alpakatools::make_device_view(alpaka::getDev(queue), getField16<T>(field), n);
+      auto host_view = cms::alpakatools::make_host_view(inputs, n);
+      alpaka::memcpy(queue, device_view, host_view);
+    }
 
 
   };

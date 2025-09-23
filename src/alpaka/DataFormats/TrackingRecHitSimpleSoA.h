@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <vector>
+#include <iostream>
 
 class TrackingRecHitSimpleSoA {
 public:
@@ -31,7 +32,8 @@ public:
       size_t nHits,
       const float* xl, const float* yl, const float* xerr, const float* yerr,
       const float* xg, const float* yg, const float* zg, const float* rg, const int16_t* iphi,
-      const int32_t* charge, const int16_t* xsize, const int16_t* ysize, const int16_t* detInd)
+      const int32_t* charge, const int16_t* xsize, const int16_t* ysize, const int16_t* detInd,
+      const uint32_t* modStart)
       : m_xl(xl, xl + nHits),
         m_yl(yl, yl + nHits),
         m_xerr(xerr, xerr + nHits),
@@ -44,9 +46,11 @@ public:
         m_charge(charge, charge + nHits),
         m_xsize(xsize, xsize + nHits),
         m_ysize(ysize, ysize + nHits),
-        m_detInd(detInd, detInd + nHits) 
+        m_detInd(detInd, detInd + nHits),
+        m_moduleStart(modStart, modStart + nHits) 
   {
     assert(m_xl.size() == nHits);
+    //TODO add assert for modStart[-1] == nHits;
   }
   ~TrackingRecHitSimpleSoA() = default;
 
@@ -107,7 +111,27 @@ public:
   std::vector<int16_t>& detIndVector() { return m_detInd; }
   const std::vector<int16_t>& detIndVector() const { return m_detInd; }
 
-  const std::vector<std::vector<uint32_t>>& moduleStartVec() const { return m_moduleStart; }
+  std::vector<uint32_t>& moduleStartVec() { return m_moduleStart; }
+  const std::vector<uint32_t>& moduleStartVec() const { return m_moduleStart; }
+
+  void setHits(uint32_t nHits)
+  {
+    m_xl.resize(nHits);
+    m_yl.resize(nHits);
+    m_xerr.resize(nHits);
+    m_yerr.resize(nHits);
+
+    m_xg.resize(nHits);
+    m_yg.resize(nHits);
+    m_zg.resize(nHits);
+    m_rg.resize(nHits);
+    m_iphi.resize(nHits);
+
+    m_charge.resize(nHits);
+    m_xsize.resize(nHits);
+    m_ysize.resize(nHits);
+    m_detInd.resize(nHits);
+  }
 
   void readBinary(std::istream& is) {
 
@@ -136,6 +160,107 @@ public:
     readVector(m_detInd);
   }
 
+  // Split a line by delimiter (default = comma)
+  std::vector<std::string> split(const std::string &line, char delimiter = ',') {
+      std::vector<std::string> tokens;
+      std::stringstream ss(line);
+      std::string item;
+      while (std::getline(ss, item, delimiter)) {
+          if (!item.empty()) tokens.push_back(item);
+      }
+      return tokens;
+  }
+
+  bool readText(std::istream& file) {
+    
+    std::string line;
+
+    // skip empty lines
+    while (std::getline(file, line)) {
+        if (!line.empty()) break;
+    }
+    if (file.eof()) return false;
+
+     if (line.rfind("hits:", 0) != 0) {
+        std::cerr << "Expected 'hits:NHITS', got: " << line << "\n";
+        return false;
+    }
+
+    size_t nHits = std::stoul(line.substr(5)); // after "hits:"
+
+    // --- read NHITS lines ---
+    m_xl.reserve(nHits);
+    m_yl.reserve(nHits);
+    m_xerr.reserve(nHits);
+    m_yerr.reserve(nHits);
+    m_xg.reserve(nHits);
+    m_yg.reserve(nHits);
+    m_zg.reserve(nHits);
+    m_rg.reserve(nHits);
+    m_iphi.reserve(nHits);
+    m_charge.reserve(nHits);
+    m_xsize.reserve(nHits);
+    m_ysize.reserve(nHits);
+    m_detInd.reserve(nHits);
+
+    for (size_t i = 0; i < nHits; ++i) {
+        if (!std::getline(file, line)) {
+            std::cerr << "Unexpected end of file while reading hits.\n";
+            return false;
+        }
+        auto tokens = split(line);
+        if (tokens.size() != 13) {
+            std::cerr << "Hit row " << i << " has " << tokens.size()
+                      << " columns, expected 13.\n";
+            return false;
+        }
+
+        m_xl.push_back(std::stof(tokens[0]));
+        m_yl.push_back(std::stof(tokens[1]));
+        m_xerr.push_back(std::stof(tokens[2]));
+        m_yerr.push_back(std::stof(tokens[3]));
+        m_xg.push_back(std::stof(tokens[4]));
+        m_yg.push_back(std::stof(tokens[5]));
+        m_zg.push_back(std::stof(tokens[6]));
+        m_rg.push_back(std::stof(tokens[7]));
+        m_iphi.push_back(static_cast<int16_t>(std::stoi(tokens[8])));
+        m_charge.push_back(std::stoi(tokens[9]));
+        m_xsize.push_back(static_cast<int16_t>(std::stoi(tokens[10])));
+        m_ysize.push_back(static_cast<int16_t>(std::stoi(tokens[11])));
+        m_detInd.push_back(static_cast<int16_t>(std::stoi(tokens[12])));
+    }
+
+    // --- read module header ---
+    if (!std::getline(file, line)) {
+        std::cerr << "Missing module header.\n";
+        return false;
+    }
+    if (line.rfind("module:", 0) != 0) {
+        std::cerr << "Expected 'module:NMODULES' header, got: " << line << "\n";
+        return false;
+    }
+    size_t nModules = std::stoul(line.substr(7)); // after "module:"
+
+    // --- read one line with NMODULES+1 entries ---
+    if (!std::getline(file, line)) {
+        std::cerr << "Missing module start line.\n";
+        return false;
+    }
+    auto tokens = split(line);
+    if (tokens.size() != nModules + 1) {
+        std::cerr << "Module start line has " << tokens.size()
+                  << " entries, expected " << (nModules + 1) << ".\n";
+        return false;
+    }
+
+    m_moduleStart.reserve(nModules + 1);
+    for (auto &tok : tokens) {
+        m_moduleStart.push_back(static_cast<uint32_t>(std::stoul(tok)));
+    }
+
+    return true;
+  }
+
 private:
 
     // local coord
@@ -157,7 +282,7 @@ private:
   std::vector<int16_t> m_ysize;
   std::vector<int16_t> m_detInd;
 
-  std::vector<std::vector<uint32_t>> m_moduleStart;
+  std::vector<uint32_t> m_moduleStart;
 
 
 };

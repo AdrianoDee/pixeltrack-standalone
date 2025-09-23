@@ -38,7 +38,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto& hits = *phits;
 
         const uint32_t blockIdx(alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[0u]);
-        const uint32_t threadIdxLocal(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[0u]);
 
         // to be moved in common namespace...
         constexpr uint16_t InvId = 9999;  // must be > MaxNumModules
@@ -56,6 +55,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           return;
 
 #ifdef GPU_DEBUG
+        const uint32_t threadIdxLocal(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[0u]);
+
         if (threadIdxLocal == 0) {
           auto k = clusters.moduleStart(1 + blockIdx);
           while (digis.moduleInd(k) == InvId)

@@ -1,63 +1,50 @@
-// #include <iostream>
+#include <iostream>
 
-// #include "AlpakaCore/Product.h"
-// #include "AlpakaCore/ScopedContext.h"
-// #include "AlpakaCore/config.h"
-// #include "AlpakaDataFormats/alpaka/BeamSpotAlpaka.h"
-// #include "AlpakaDataFormats/alpaka/SiPixelClustersAlpaka.h"
-// #include "AlpakaDataFormats/alpaka/SiPixelDigisAlpaka.h"
-// #include "AlpakaDataFormats/alpaka/TrackingRecHit2DAlpaka.h"
-// #include "CondFormats/alpaka/PixelCPEFast.h"
-// #include "Framework/EDProducer.h"
-// #include "Framework/Event.h"
-// #include "Framework/EventSetup.h"
-// #include "Framework/PluginFactory.h"
+#include "AlpakaCore/Product.h"
+#include "AlpakaCore/ScopedContext.h"
+#include "AlpakaCore/config.h"
+#include "DataFormats/BeamSpotPOD.h"
+#include "AlpakaDataFormats/alpaka/TrackingRecHit2DAlpaka.h"
+#include "DataFormats/TrackingRecHitSimpleSoA.h"
+#include "Framework/EDProducer.h"
+#include "Framework/Event.h"
+#include "Framework/EventSetup.h"
+#include "Framework/PluginFactory.h"
 
-// #include "PixelRecHits.h"  // TODO : split product from kernel
+namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
-// namespace ALPAKA_ACCELERATOR_NAMESPACE {
+  class SiPixelRecHitFromSimple : public edm::EDProducer {
+  public:
+    explicit SiPixelRecHitFromSimple(edm::ProductRegistry& reg);
+    ~SiPixelRecHitFromSimple() override = default;
 
-//   class SiPixelRecHitFromSimple : public edm::EDProducer {
-//   public:
-//     explicit SiPixelRecHitFromSimple(edm::ProductRegistry& reg);
-//     ~SiPixelRecHitFromSimple() override = default;
+  private:
+    void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
+    
+    cms::alpakatools::host_buffer<BeamSpotPOD> bsHost_;
+    edm::EDGetTokenT<TrackingRecHitSimpleSoA> tSimpleHits_;
+    edm::EDPutTokenT<cms::alpakatools::Product<Queue, TrackingRecHit2DAlpaka>> tHits_;
 
-//   private:
-//     void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
+  };
 
-//     edm::EDGetTokenT<TrackingRecHitSimpleSoA> tSimpleHits_;
+  SiPixelRecHitFromSimple::SiPixelRecHitFromSimple(edm::ProductRegistry& reg)
+      : bsHost_{cms::alpakatools::make_host_buffer<BeamSpotPOD, Platform>()},
+        tSimpleHits_(reg.consumes<TrackingRecHitSimpleSoA>()),
+        tHits_(reg.produces<cms::alpakatools::Product<Queue, TrackingRecHit2DAlpaka>>()) {}
 
-//     edm::EDPutTokenT<cms::alpakatools::Product<Queue, TrackingRecHit2DAlpaka>> tokenHit_;
-//     cms::alpakatools::host_buffer<BeamSpotPOD> bsHost_;
+  void SiPixelRecHitFromSimple::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
-//   };
+    *bsHost_ = iSetup.get<BeamSpotPOD>();
 
-//   SiPixelRecHitFromSimple::SiPixelRecHitFromSimple(edm::ProductRegistry& reg)
-//       : tBeamSpot(reg.consumes<cms::alpakatools::Product<Queue, BeamSpotAlpaka>>()),
-//         tSimpleHits_(reg.consumes<cms::alpakatools::Product<Queue, SiPixelClustersAlpaka>>()),
-//         tokenDigi_(reg.consumes<cms::alpakatools::Product<Queue, SiPixelDigisAlpaka>>()),
-//         bsHost_{cms::alpakatools::make_host_buffer<BeamSpotPOD, Platform>()} {}
+    cms::alpakatools::ScopedContextProduce<Queue> ctx{iEvent.streamID()};
+    
+    auto const& simpleHits = iEvent.get(tSimpleHits_);
+    TrackingRecHit2DAlpaka hits(simpleHits, ctx.stream());
 
-//   void SiPixelRecHitFromSimple::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+    ctx.emplace(iEvent, tHits_, std::move(hits));
+    
+  }
 
-//     *bsHost_ = iSetup.get<BeamSpotPOD>();
+}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
 
-//     auto const& pclusters = iEvent.get(token_);
-//     cms::alpakatools::ScopedContextProduce<Queue> ctx{pclusters};
-
-//     auto const& clusters = ctx.get(pclusters);
-//     auto const& digis = ctx.get(iEvent, tokenDigi_);
-//     auto const& bs = ctx.get(iEvent, tBeamSpot);
-
-//     auto nHits = clusters.nClusters();
-//     if (nHits >= TrackingRecHit2DSoAView::maxHits()) {
-//       std::cout << "Clusters/Hits Overflow " << nHits << " >= " << TrackingRecHit2DSoAView::maxHits() << std::endl;
-//     }
-//     ctx.emplace(iEvent,
-//                 tokenHit_,
-//                 gpuAlgo_.makeHitsAsync(digis, clusters, bs, fcpe.getGPUProductAsync(ctx.stream()), ctx.stream()));
-//   }
-
-// }  // namespace ALPAKA_ACCELERATOR_NAMESPACE
-
-// DEFINE_FWK_ALPAKA_MODULE(SiPixelRecHitFromSimple);
+DEFINE_FWK_ALPAKA_MODULE(SiPixelRecHitFromSimple);

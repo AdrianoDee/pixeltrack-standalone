@@ -24,14 +24,17 @@ namespace {
     return rawCollection;
   }
 
-  TrackingRecHitSimpleSoA readHits(std::istream& is, unsigned int nHits) {
+//   TrackingRecHitSimpleSoA readHits(std::ifstream &if) {
 
-    TrackingRecHitSimpleSoA hitSoA(nHits);
-
-    hitSoA.readBinary(is);
+//     TrackingRecHitSimpleSoA hitSoA(1);
+//     hitSoA.readText(if);
+// // #ifdef HITSBIN
+// //     hitSoA.readBinary(is);
+// // #else
     
-    return hitSoA;
-  }
+// // #endif
+//     return hitSoA;
+//   }
 
 }  // namespace
 
@@ -44,8 +47,11 @@ namespace edm {
         fromHits_(fromHits) {
     
     
+    if(fromHits_ and validation_)
+     throw std::runtime_error("--fromHits and --validation can't work together (yet)");
+    
     std::ifstream in_raw;
-
+      
     if (not fromHits_)
     {
       in_raw.open(datadir / "raw.bin", std::ios::binary);
@@ -53,7 +59,7 @@ namespace edm {
     }
     else
     {
-      in_raw.open(datadir / "hits.bin", std::ios::binary);
+      in_raw.open(datadir / "hits.txt", std::ios::binary);
       hitToken_ = reg.produces<TrackingRecHitSimpleSoA>();
     }
     std::ifstream in_digiclusters;
@@ -73,34 +79,43 @@ namespace edm {
       in_vertices.exceptions(std::ifstream::badbit | std::ifstream::failbit | std::ifstream::eofbit);
     }
 
-    unsigned int nfeds;
-    in_raw.exceptions(std::ifstream::badbit);
-    in_raw.read(reinterpret_cast<char *>(&nfeds), sizeof(unsigned int));
-    while (not in_raw.eof()) {
-      in_raw.exceptions(std::ifstream::badbit | std::ifstream::failbit | std::ifstream::eofbit);
-
-      if (not fromHits_)
-        raw_.emplace_back(readRaw(in_raw, nfeds));
-      else
-        hits_.emplace_back(readHits(in_raw, nfeds)); //READ HITS
-      if (validation_) {
-        unsigned int nm, nd, nc, nt, nv;
-        in_digiclusters.read(reinterpret_cast<char *>(&nm), sizeof(unsigned int));
-        in_digiclusters.read(reinterpret_cast<char *>(&nd), sizeof(unsigned int));
-        in_digiclusters.read(reinterpret_cast<char *>(&nc), sizeof(unsigned int));
-        in_tracks.read(reinterpret_cast<char *>(&nt), sizeof(unsigned int));
-        in_vertices.read(reinterpret_cast<char *>(&nv), sizeof(unsigned int));
-        digiclusters_.emplace_back(nm, nd, nc);
-        tracks_.emplace_back(nt);
-        vertices_.emplace_back(nv);
-      }
-
-      // next event
+    if(not fromHits_)
+    {
+      unsigned int nfeds;
       in_raw.exceptions(std::ifstream::badbit);
       in_raw.read(reinterpret_cast<char *>(&nfeds), sizeof(unsigned int));
+      while (not in_raw.eof()) {
+        in_raw.exceptions(std::ifstream::badbit | std::ifstream::failbit | std::ifstream::eofbit);
+
+        raw_.emplace_back(readRaw(in_raw, nfeds));
+
+        if (validation_) {
+          unsigned int nm, nd, nc, nt, nv;
+          in_digiclusters.read(reinterpret_cast<char *>(&nm), sizeof(unsigned int));
+          in_digiclusters.read(reinterpret_cast<char *>(&nd), sizeof(unsigned int));
+          in_digiclusters.read(reinterpret_cast<char *>(&nc), sizeof(unsigned int));
+          in_tracks.read(reinterpret_cast<char *>(&nt), sizeof(unsigned int));
+          in_vertices.read(reinterpret_cast<char *>(&nv), sizeof(unsigned int));
+          digiclusters_.emplace_back(nm, nd, nc);
+          tracks_.emplace_back(nt);
+          vertices_.emplace_back(nv);
+        }
+
+        // next event
+        in_raw.exceptions(std::ifstream::badbit);
+        in_raw.read(reinterpret_cast<char *>(&nfeds), sizeof(unsigned int));
+      }
+    }
+    else
+    {
+      while (true) {
+        TrackingRecHitSimpleSoA soa;
+        if (!soa.readText(in_raw)) break;
+        hits_.push_back(std::move(soa));
+      }
     }
 
-    if (validation_) {
+    if (validation_ and not fromHits_) { //TODO allow for fromHits validation
       assert(raw_.size() == digiclusters_.size());
       assert(raw_.size() == tracks_.size());
       assert(raw_.size() == vertices_.size());
