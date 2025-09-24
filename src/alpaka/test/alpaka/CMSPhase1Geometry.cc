@@ -3,11 +3,80 @@
 #include <vector>
 #include <cstdint>
 #include <cassert>
+#include <filesystem>
 
 #include "DataFormats/SOARotation.h"
 #include "CondFormats/CAGeometrySoA.h"
 
 using namespace caGeometry;
+using Frame = SOAFrame<float>;
+namespace fs = std::filesystem;
+
+struct DetParams {
+    bool isBarrel;
+    bool isPosZ;
+    uint16_t layer;
+    uint16_t index;
+    uint32_t rawId;
+
+    float shiftX;
+    float shiftY;
+    float chargeWidthX;
+    float chargeWidthY;
+    // CMSSW 11.2.x adds
+    //uint16_t pixmx;  // max pix charge
+    // which would break reading the binary dumps
+
+    float x0, y0, z0;  // the vertex in the local coord of the detector
+
+    float sx[3], sy[3];  // the errors...
+
+    Frame frame;
+  };
+
+// all modules are identical!
+struct CommonParams {
+    float theThicknessB;
+    float theThicknessE;
+    float thePitchX;
+    float thePitchY;
+  };
+  
+class PixelCPEFast {
+  public:
+    PixelCPEFast(std::string const &inputPath, std::string const &outputPath){
+      std::ifstream in(inputPath, std::ios::binary);
+      in.exceptions(std::ifstream::badbit | std::ifstream::failbit | std::ifstream::eofbit);
+      in.read(reinterpret_cast<char *>(&m_commonParamsGPU), sizeof(CommonParams));
+      unsigned int ndetParams;
+      in.read(reinterpret_cast<char *>(&ndetParams), sizeof(unsigned int));
+      m_detParamsGPU.resize(ndetParams);
+      in.read(reinterpret_cast<char *>(m_detParamsGPU.data()), ndetParams * sizeof(DetParams));
+
+      std::ofstream out(outputPath + "/CMSPhase1Modules.bin", std::ios::binary);
+      if (!out) throw std::runtime_error("Cannot open file for writing");
+
+      std::cout << "=== Writing " <<  ndetParams << " modules" << std::endl;
+      for(auto const &v: m_detParamsGPU)
+      {
+        auto f = v.frame;
+        out.write(reinterpret_cast<const char*>(&f), sizeof(f));
+      }
+
+      out.close();
+      std::cout << "CMSPhase1Modules.bin written.\n";
+
+    }
+
+    ~PixelCPEFast() = default;
+
+      private:
+    // allocate it with posix malloc to be compatible with cpu wf
+    std::vector<DetParams> m_detParamsGPU;
+    CommonParams m_commonParamsGPU;
+
+
+};
 
 // --- Constants ---
 constexpr uint16_t nModules = 1856;
@@ -75,8 +144,13 @@ constexpr float caThetaCuts_vals[nLayers] = {
     0.003, 0.003, 0.003, 0.003, 0.003
 };
 
-int write() {
-    std::ifstream ifs("../../data/CMSPhase1Modules.bin", std::ios::binary);
+int writeModules(std::string dataDir) {
+    PixelCPEFast dummyPixelCPEFast(dataDir + "/cpefast.bin", dataDir);
+    return 1;
+}
+
+int write(std::string dataDir) {
+    std::ifstream ifs(dataDir + "/CMSPhase1Modules.bin", std::ios::binary);
     if (!ifs) {
         std::cerr << "Error: cannot open CMSPhase1Modules.bin for reading.\n";
         return 1;
@@ -121,7 +195,7 @@ int write() {
     geo.m_layers   = layers.data();
     geo.m_pairs    = pairs.data();
 
-    std::ofstream ofs("../../data/CMSPhase1Geometry.bin", std::ios::binary);
+    std::ofstream ofs(dataDir + "/CMSPhase1Geometry.bin", std::ios::binary);
     ofs.write(reinterpret_cast<const char*>(&geo.m_nModules), sizeof(geo.m_nModules));
     ofs.write(reinterpret_cast<const char*>(&geo.m_nLayers),  sizeof(geo.m_nLayers));
     ofs.write(reinterpret_cast<const char*>(&geo.m_nPairs),   sizeof(geo.m_nPairs));
@@ -136,8 +210,8 @@ int write() {
     return 0;
 }
 
-int verify() {
-    std::ifstream ifs("../../data/CMSPhase1Geometry.bin", std::ios::binary);
+int verify(std::string dataDir) {
+    std::ifstream ifs(dataDir + "/CMSPhase1Geometry.bin", std::ios::binary);
 
     if (!ifs) {
         std::cerr << "Error opening CMSPhase1Geometry.bin\n";
@@ -183,8 +257,13 @@ int verify() {
     return 0;
 }
 
-int main() {
-    write();
-    verify();
+int main(int argc, char* argv[]) {
+    fs::path exePath = fs::absolute(argv[0]);
+    fs::path exeDir = exePath.parent_path();
+    fs::path dataDir = exeDir / "../../../../data/";
+    dataDir = fs::canonical(dataDir);
+    writeModules(dataDir.string());
+    write(dataDir.string());
+    verify(dataDir.string());
     return 0;
 }
