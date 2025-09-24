@@ -52,7 +52,7 @@ class PixelCPEFast {
       m_detParamsGPU.resize(ndetParams);
       in.read(reinterpret_cast<char *>(m_detParamsGPU.data()), ndetParams * sizeof(DetParams));
 
-      std::ofstream out("../../../../CMSPhase1Modules.bin", std::ios::binary);
+      std::ofstream out("../../../../data/CMSPhase1Modules.bin", std::ios::binary);
       if (!out) throw std::runtime_error("Cannot open file for writing");
 
       std::cout << "=== Writing " <<  ndetParams << " modules" << std::endl;
@@ -149,7 +149,7 @@ int writeModules() {
 }
 
 int write() {
-    std::ifstream ifs("../../../../CMSPhase1Modules.bin", std::ios::binary);
+    std::ifstream ifs("../../../../data/CMSPhase1Modules.bin", std::ios::binary);
     if (!ifs) {
         std::cerr << "Error: cannot open CMSPhase1Modules.bin for reading.\n";
         return 1;
