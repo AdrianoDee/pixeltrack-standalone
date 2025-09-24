@@ -59,7 +59,9 @@ namespace edm {
     }
     else
     {
-      in_raw.open(datadir / "hits.txt", std::ios::binary);
+      // in_raw.open(datadir / "hits.txt", std::ios::binary);
+      // TODO: remember to set this back to something more general
+      in_raw.open(datadir / "hitsTest.txt", std::ios::binary);
       hitToken_ = reg.produces<TrackingRecHitSimpleSoA>();
     }
     std::ifstream in_digiclusters;
@@ -122,7 +124,8 @@ namespace edm {
     }
 
     if (runForMinutes_ < 0 and maxEvents_ < 0) {
-      maxEvents_ = raw_.size();
+      if (not fromHits) maxEvents_ = raw_.size();
+      else maxEvents_ = hits_.size();
     }
   }
 
