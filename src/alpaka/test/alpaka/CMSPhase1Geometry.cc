@@ -143,8 +143,8 @@ constexpr float caThetaCuts_vals[nLayers] = {
     0.003, 0.003, 0.003, 0.003, 0.003
 };
 
-int writeDeMaluco() {
-    PixelCPEFast oloko("../../../../data/cpefast.bin");
+int writeModules() {
+    PixelCPEFast dummyPixelCPEFast("../../../../data/cpefast.bin");
     return 1;
 }
 
@@ -257,7 +257,7 @@ int verify() {
 }
 
 int main() {
-    writeDeMaluco();
+    writeModules();
     write();
     verify();
     return 0;
