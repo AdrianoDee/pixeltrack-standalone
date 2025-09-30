@@ -266,7 +266,8 @@ int main(int argc, char** argv) {
   edm::Alternatives alternatives;
   if (not empty) {
     // host-only ESModules
-    if (not fromHits) esmodules = {"BeamSpotESProducer", "SiPixelFedIdsESProducer"};
+    esmodules = {"BeamSpotESProducer"};
+    if (not fromHits) esmodules.emplace_back("SiPixelFedIdsESProducer");
     for (auto const& [backend, weight] : backends) {
       std::string prefix = "alpaka_" + name(backend) + "::";
       // "portable" ESModules
@@ -276,7 +277,7 @@ int main(int argc, char** argv) {
       esmodules.emplace_back(prefix + "CAGeometryESProducer");
       // "portable" EDModules
       std::vector<std::string> edmodules;
-      if (not fromHits) edmodules.emplace_back(prefix + "BeamSpotToAlpaka");
+      edmodules.emplace_back(prefix + "BeamSpotToAlpaka");
       if (not fromHits) edmodules.emplace_back(prefix + "SiPixelRawToCluster");
       if (not fromHits) edmodules.emplace_back(prefix + "SiPixelRecHitAlpaka");
       if (fromHits) edmodules.emplace_back(prefix + "SiPixelRecHitFromSimple");

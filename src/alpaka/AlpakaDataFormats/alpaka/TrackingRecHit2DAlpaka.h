@@ -28,7 +28,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       m_view = cms::alpakatools::make_device_buffer<TrackingRecHit2DSoAView>(queue);
       m_view_h = cms::alpakatools::make_host_buffer<TrackingRecHit2DSoAView>(queue);
 
-      field32ToDeviceAsync(Fields32::yl, simpleHits.xlVector().data(), m_nHits, queue);
+      field32ToDeviceAsync(Fields32::xl, simpleHits.xlVector().data(), m_nHits, queue);
       field32ToDeviceAsync(Fields32::yl, simpleHits.ylVector().data(), m_nHits, queue);
       field32ToDeviceAsync(Fields32::xerr, simpleHits.xerrVector().data(), m_nHits, queue);
       field32ToDeviceAsync(Fields32::yerr, simpleHits.yerrVector().data(), m_nHits, queue);
@@ -36,7 +36,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       field32ToDeviceAsync(Fields32::yg, simpleHits.ygVector().data(), m_nHits, queue);
       field32ToDeviceAsync(Fields32::zg, simpleHits.zgVector().data(), m_nHits, queue);
       field32ToDeviceAsync(Fields32::rg, simpleHits.rgVector().data(), m_nHits, queue);
-      // field16ToDeviceAsync(Fields32::iphi, simpleHits.iphiVector().data(), m_nHits, queue);
+      field16ToDeviceAsync(Fields16::iphi, simpleHits.iphiVector().data(), m_nHits, queue);
       field32ToDeviceAsync(Fields32::charge, simpleHits.chargeVector().data(), m_nHits, queue);
       field16ToDeviceAsync(Fields16::xsize, simpleHits.xsizeVector().data(), m_nHits, queue);
       field16ToDeviceAsync(Fields16::ysize, simpleHits.ysizeVector().data(), m_nHits, queue);
@@ -44,25 +44,36 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       
       m_nHits = (*m_view_h)->m_nHits = uint32_t(m_nHits);
       m_hitsModuleStart =  (*m_view_h)->m_hitsModuleStart = endOf32();
+      std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
+      std::cout << "sizeof((*m_view_h)->m_hitsModuleStart): " << sizeof((*m_view_h)->m_hitsModuleStart) << std::endl;
+      std::cout << "(*m_view_h)->m_hitsModuleStart[0]: " << (*m_view_h)->m_hitsModuleStart[0] << std::endl;
+      std::cout << "(*m_view_h)->m_hitsModuleStart[1]: " << (*m_view_h)->m_hitsModuleStart[1] << std::endl;
+      std::cout << "(*m_view_h)->m_hitsModuleStart[2]: " << (*m_view_h)->m_hitsModuleStart[2] << std::endl;
+      std::cout << "(*m_view_h)->m_hitsModuleStart[3]: " << (*m_view_h)->m_hitsModuleStart[3] << std::endl;
+      std::cout << "(*m_view_h)->m_hitsModuleStart[4]: " << (*m_view_h)->m_hitsModuleStart[4] << std::endl;
+      std::cout << "(*m_view_h)->m_hitsModuleStart[5]: " << (*m_view_h)->m_hitsModuleStart[5] << std::endl;
+      std::cout << "(*m_view_h)->m_hitsModuleStart[6]: " << (*m_view_h)->m_hitsModuleStart[6] << std::endl;
+      std::cout << "(*m_view_h)->m_hitsModuleStart[7]: " << (*m_view_h)->m_hitsModuleStart[7] << std::endl;
+      std::cout << "(*m_view_h)->m_hitsModuleStart[8]: " << (*m_view_h)->m_hitsModuleStart[8] << std::endl;
+      std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
 
-      // // pointers to data owned by this TrackingRecHit2DAlpaka object:
-      // (*m_view_h)->m_xl     = simpleHits.xlVector().data();
-      // (*m_view_h)->m_yl     = simpleHits.ylVector().data();
-      // (*m_view_h)->m_xerr   = simpleHits.xerrVector().data();
-      // (*m_view_h)->m_yerr   = simpleHits.yerrVector().data();
-      // (*m_view_h)->m_xg     = simpleHits.xgVector().data();
-      // (*m_view_h)->m_yg     = simpleHits.ygVector().data();
-      // (*m_view_h)->m_zg     = simpleHits.zgVector().data();
-      // (*m_view_h)->m_rg     = simpleHits.rgVector().data();
-      // (*m_view_h)->m_iphi   = simpleHits.iphiVector().data();
-      // (*m_view_h)->m_charge = simpleHits.chargeVector().data();
-      // (*m_view_h)->m_xsize  = simpleHits.xsizeVector().data();
-      // (*m_view_h)->m_ysize  = simpleHits.ysizeVector().data();
-      // (*m_view_h)->m_detInd = simpleHits.detIndVector().data();;
+      // pointers to data owned by this TrackingRecHit2DAlpaka object:
+      (*m_view_h)->m_xl     = const_cast<float*>(simpleHits.xlVector().data());
+      (*m_view_h)->m_yl     = const_cast<float*>(simpleHits.ylVector().data());
+      (*m_view_h)->m_xerr   = const_cast<float*>(simpleHits.xerrVector().data());
+      (*m_view_h)->m_yerr   = const_cast<float*>(simpleHits.yerrVector().data());
+      (*m_view_h)->m_xg     = const_cast<float*>(simpleHits.xgVector().data());
+      (*m_view_h)->m_yg     = const_cast<float*>(simpleHits.ygVector().data());
+      (*m_view_h)->m_zg     = const_cast<float*>(simpleHits.zgVector().data());
+      (*m_view_h)->m_rg     = const_cast<float*>(simpleHits.rgVector().data());
+      (*m_view_h)->m_iphi   = const_cast<short int*>(simpleHits.iphiVector().data());
+      (*m_view_h)->m_charge = const_cast<int*>(simpleHits.chargeVector().data());
+      (*m_view_h)->m_xsize  = const_cast<short int*>(simpleHits.xsizeVector().data());
+      (*m_view_h)->m_ysize  = const_cast<short int*>(simpleHits.ysizeVector().data());
+      (*m_view_h)->m_detInd = const_cast<short int*>(simpleHits.detIndVector().data());
 
       // copy the SoA view to the device
-      // alpaka::memcpy(queue, m_view, m_view_h);
-      alpaka::memcpy(queue, *m_view_h, *m_view);
+      alpaka::memcpy(queue, *m_view, *m_view_h);
       alpaka::wait(queue);
 
     };
@@ -147,6 +158,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       // copy the SoA view to the device
       alpaka::memcpy(queue, *m_view, *m_view_h);
+
     }
 
     ~TrackingRecHit2DAlpaka() = default;
@@ -253,7 +265,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     int16_t* ysize() { return getField16<int16_t>(Fields16::ysize); }
 
     int16_t* iphi() { return getField16<int16_t>(Fields16::iphi); }
-    uint16_t* detInd() { return getField16<uint16_t>(Fields16::detInd); }
+    int16_t* detInd() { return getField16<int16_t>(Fields16::detInd); }
 
     // const accessors
     float const* xl() const { return getField32<float>(Fields32::xl); }
@@ -273,7 +285,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     int16_t const* ysize() const { return getField16<int16_t>(Fields16::ysize); }
 
     int16_t const* iphi() const { return getField16<int16_t>(Fields16::iphi); }
-    uint16_t const* detInd() const { return getField16<uint16_t>(Fields16::detInd); }
+    int16_t const* detInd() const { return getField16<int16_t>(Fields16::detInd); }
 
     // explicitly const accessors
     int16_t const* c_iphi() const { return getField16<int16_t>(Fields16::iphi); }

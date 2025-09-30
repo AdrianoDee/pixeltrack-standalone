@@ -94,6 +94,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       alpaka::wait(queue);
 #endif
 
+      std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
+      std::cout << "sizeof(hits_d.hitsModuleStart()): " << sizeof(hits_d.hitsModuleStart()) << std::endl;
+    std::cout << "hits_d.hitsModuleStart()[0]: " << hits_d.hitsModuleStart()[0] << std::endl;
+    std::cout << "hits_d.hitsModuleStart()[1]: " << hits_d.hitsModuleStart()[1] << std::endl;
+    std::cout << "hits_d.hitsModuleStart()[2]: " << hits_d.hitsModuleStart()[2] << std::endl;
+    std::cout << "hits_d.hitsModuleStart()[3]: " << hits_d.hitsModuleStart()[3] << std::endl;
+    std::cout << "hits_d.hitsModuleStart()[4]: " << hits_d.hitsModuleStart()[4] << std::endl;
+    std::cout << "hits_d.hitsModuleStart()[5]: " << hits_d.hitsModuleStart()[5] << std::endl;
+    std::cout << "hits_d.hitsModuleStart()[6]: " << hits_d.hitsModuleStart()[6] << std::endl;
+    std::cout << "hits_d.hitsModuleStart()[7]: " << hits_d.hitsModuleStart()[7] << std::endl;
+    std::cout << "hits_d.hitsModuleStart()[8]: " << hits_d.hitsModuleStart()[8] << std::endl;;
+      std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
+
       return hits_d;
     }
 

@@ -25,7 +25,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     // std::cout << "this->m_Layers " << this->m_Layers << " - " << hits_d.nHits() << std::endl;
 
+    std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
+
     cms::alpakatools::fillManyFromVector<Acc1D>(this->device_hitHist_.data(), this->m_Layers, hits_d.c_iphi(), this->device_layerStarts_.data(), hits_d.nHits(), 256, queue);
+
+    std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
 
 #ifdef GPU_DEBUG
     alpaka::wait(queue);
