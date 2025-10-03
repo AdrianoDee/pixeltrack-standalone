@@ -274,7 +274,8 @@ int main(int argc, char** argv) {
       if (not fromHits) esmodules.emplace_back(prefix + "SiPixelFedCablingMapESProducer");
       if (not fromHits) esmodules.emplace_back(prefix + "SiPixelGainCalibrationForHLTESProducer");
       if (not fromHits) esmodules.emplace_back(prefix + "PixelCPEFastESProducer");
-      esmodules.emplace_back(prefix + "CAGeometryESProducer");
+      if (not fromHits) esmodules.emplace_back(prefix + "CAGeometryESProducer");
+      if (fromHits) esmodules.emplace_back(prefix + "AdHocCAGeometryESProducer");
       // "portable" EDModules
       std::vector<std::string> edmodules;
       edmodules.emplace_back(prefix + "BeamSpotToAlpaka");

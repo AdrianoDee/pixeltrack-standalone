@@ -62,12 +62,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         unsigned int nLayers  = m_caLayers.size();
         unsigned int nPairs   = m_caPairs.size();
 
-        std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
-        std::cout << "nModules: " << nModules << std::endl; 
-        std::cout << "nLayers: " << nLayers << std::endl; 
-        std::cout << "nPairs: " << nPairs << std::endl; 
-        std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
-
         GPUData gpuData(queue, nModules, nLayers, nPairs);
 
         auto modules_h = cms::alpakatools::make_host_view(m_caModules.data(), nModules);

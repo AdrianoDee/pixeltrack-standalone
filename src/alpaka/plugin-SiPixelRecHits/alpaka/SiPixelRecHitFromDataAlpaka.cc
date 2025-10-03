@@ -41,19 +41,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto const& simpleHits = iEvent.get(tSimpleHits_);
     TrackingRecHit2DAlpaka hits(simpleHits, ctx.stream());
 
-    std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
-    std::cout << "sizeof(hits.hitsModuleStart()): " << sizeof(hits.hitsModuleStart()) << std::endl;
-    std::cout << "hits.hitsModuleStart()[0]: " << hits.hitsModuleStart()[0] << std::endl;
-    std::cout << "hits.hitsModuleStart()[1]: " << hits.hitsModuleStart()[1] << std::endl;
-    std::cout << "hits.hitsModuleStart()[2]: " << hits.hitsModuleStart()[2] << std::endl;
-    std::cout << "hits.hitsModuleStart()[3]: " << hits.hitsModuleStart()[3] << std::endl;
-    std::cout << "hits.hitsModuleStart()[4]: " << hits.hitsModuleStart()[4] << std::endl;
-    std::cout << "hits.hitsModuleStart()[5]: " << hits.hitsModuleStart()[5] << std::endl;
-    std::cout << "hits.hitsModuleStart()[6]: " << hits.hitsModuleStart()[6] << std::endl;
-    std::cout << "hits.hitsModuleStart()[7]: " << hits.hitsModuleStart()[7] << std::endl;
-    std::cout << "hits.hitsModuleStart()[8]: " << hits.hitsModuleStart()[8] << std::endl;
-    std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
-
     ctx.emplace(iEvent, tHits_, std::move(hits));
     
   }

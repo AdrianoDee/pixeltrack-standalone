@@ -78,14 +78,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       ALPAKA_ASSERT_ACC(0 == hhp->hitsModuleStart(0));
 
       cms::alpakatools::for_each_element_in_grid(acc, geometry->m_nLayers + 1, [&](uint32_t i) {
-        printf("LayerStart %d %d: %d\n", i, geometry->m_layers[i].layerStarts, hitsLayerStart[i]);
         hitsLayerStart[i] = hhp->hitsModuleStart(geometry->m_layers[i].layerStarts);
-        printf("LayerStart %d %d: %d\n", i, geometry->m_layers[i].layerStarts, hitsLayerStart[i]);
 #ifdef GPU_DEBUG
         printf("LayerStart %d %d: %d\n", i, geometry->m_layers[i].layerStarts, hitsLayerStart[i]);
 #endif
+
       });
-    }
+  }
     };
 
   struct kernel_checkOverflows {

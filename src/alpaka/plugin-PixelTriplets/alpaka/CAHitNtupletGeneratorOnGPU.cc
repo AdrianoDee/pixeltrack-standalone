@@ -119,8 +119,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       kernels.printCounters(queue);
     }
 
-    std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
-
     return tracks;
   }
 

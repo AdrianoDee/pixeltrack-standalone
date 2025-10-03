@@ -23,20 +23,7 @@ namespace cms {
                                     uint32_t nh,
                                     T const *__restrict__ v,
                                     uint32_t const *__restrict__ offsets) const {
-        printf("1 - countFromVector -- /data/user/borzari/cmssw/pixeltrack-standalone/src/alpaka/AlpakaCore/HistoContainer.h\n");
-        printf("nh: %d\n",nh);
-        printf("offsets[0]: %d\n",offsets[0]);
-        printf("offsets[1]: %d\n",offsets[1]);
-        printf("offsets[2]: %d\n",offsets[2]);
-        printf("offsets[3]: %d\n",offsets[3]);
-        printf("offsets[4]: %d\n",offsets[4]);
-        printf("offsets[5]: %d\n",offsets[5]);
-        printf("offsets[6]: %d\n",offsets[6]);
-        printf("offsets[7]: %d\n",offsets[7]);
-        printf("offsets[8]: %d\n",offsets[8]);
-        printf("sizeof(offsets): %lu\n",sizeof(offsets));
         const uint32_t nt = offsets[nh];
-        printf("nt: %d\n",nt);
         for_each_element_in_grid_strided(acc, nt, [&](uint32_t i) {
           auto off = alpaka_std::upper_bound(offsets, offsets + nh + 1, i);
           ALPAKA_ASSERT_ACC((*off) > 0);
@@ -45,7 +32,6 @@ namespace cms {
           ALPAKA_ASSERT_ACC(ih < int(nh));
           h->count(acc, v[i], ih);
         });
-        printf("2 - countFromVector -- /data/user/borzari/cmssw/pixeltrack-standalone/src/alpaka/AlpakaCore/HistoContainer.h\n");
       }
     };
 
@@ -110,10 +96,6 @@ namespace cms {
       const auto threadsPerBlockOrElementsPerThread = nthreads;
       const auto blocksPerGrid = divide_up_by(totSize, nthreads);
       const auto workDiv = make_workdiv<TAcc>(blocksPerGrid, threadsPerBlockOrElementsPerThread);
-
-      std::cout << __LINE__ << " -- " << __FILE__ << std::endl;
-
-      std::cout << offsets[0] << std::endl;
 
       alpaka::enqueue(queue, alpaka::createTaskKernel<TAcc>(workDiv, countFromVector(), h, nh, v, offsets));
 
@@ -282,13 +264,11 @@ namespace cms {
 
       template <typename TAcc>
       ALPAKA_FN_ACC ALPAKA_FN_INLINE void count(const TAcc &acc, T t, uint32_t nh) {
-        // printf("1 - count -- /data/user/borzari/cmssw/pixeltrack-standalone/src/alpaka/AlpakaCore/HistoContainer.h\n");
         uint32_t b = bin(t);
         ALPAKA_ASSERT_ACC(b < nbins());
         b += histOff(nh);
         ALPAKA_ASSERT_ACC(b < totbins());
         atomicIncrement(acc, off[b]);
-        // printf("2 - count -- /data/user/borzari/cmssw/pixeltrack-standalone/src/alpaka/AlpakaCore/HistoContainer.h\n");
       }
 
       template <typename TAcc>

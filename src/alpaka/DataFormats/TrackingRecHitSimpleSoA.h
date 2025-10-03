@@ -47,7 +47,7 @@ public:
         m_xsize(xsize, xsize + nHits),
         m_ysize(ysize, ysize + nHits),
         m_detInd(detInd, detInd + nHits),
-        m_moduleStart(modStart, modStart + nHits) 
+        m_moduleStart(modStart, modStart + nHits)
   {
     assert(m_xl.size() == nHits);
     //TODO add assert for modStart[-1] == nHits;
@@ -283,7 +283,6 @@ private:
   std::vector<int16_t> m_detInd;
 
   std::vector<uint32_t> m_moduleStart;
-
 
 };
 
