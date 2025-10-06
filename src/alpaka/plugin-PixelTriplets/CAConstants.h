@@ -54,7 +54,7 @@ namespace CAConstants {
 #endif
 
   using PhiHist =
-      cms::alpakatools::HistoContainer<int16_t, 128, gpuClustering::MaxNumClusters, 8 * sizeof(int16_t), uint16_t, 50>; //TODO make this templated
+      cms::alpakatools::HistoContainer<int16_t, 128, gpuClustering::MaxNumClusters, 8 * sizeof(int16_t), uint32_t, 50>; //TODO make this templated
 
   using CellNeighborsVector = cms::alpakatools::SimpleVector<CellNeighbors>;
   using CellTracksVector = cms::alpakatools::SimpleVector<CellTracks>;
