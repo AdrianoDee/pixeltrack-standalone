@@ -82,8 +82,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 #ifdef GPU_DEBUG
         printf("LayerStart %d %d: %d\n", i, geometry->m_layers[i].layerStarts, hitsLayerStart[i]);
 #endif
+
       });
-    }
+  }
     };
 
   struct kernel_checkOverflows {

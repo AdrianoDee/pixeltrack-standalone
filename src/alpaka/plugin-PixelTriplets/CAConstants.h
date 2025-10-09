@@ -17,10 +17,10 @@ namespace CAConstants {
 #ifdef GPU_SMALL_EVENTS
   constexpr uint32_t maxNumberOfTuples() { return 3 * 1024; }
 #else
-  constexpr uint32_t maxNumberOfTuples() { return 24 * 1024; }
+  constexpr uint32_t maxNumberOfTuples() { return 96 * 1024; }
 #endif
 #else
-  constexpr uint32_t maxNumberOfTuples() { return 48 * 1024; }
+  constexpr uint32_t maxNumberOfTuples() { return 192 * 1024; }
 #endif
   constexpr uint32_t maxNumberOfQuadruplets() { return maxNumberOfTuples(); }
 #ifndef ONLY_PHICUT
@@ -54,7 +54,7 @@ namespace CAConstants {
 #endif
 
   using PhiHist =
-      cms::alpakatools::HistoContainer<int16_t, 128, gpuClustering::MaxNumClusters, 8 * sizeof(int16_t), uint16_t, 50>; //TODO make this templated
+      cms::alpakatools::HistoContainer<int16_t, 128, gpuClustering::MaxNumClusters, 8 * sizeof(int16_t), uint32_t, 50>; //TODO make this templated
 
   using CellNeighborsVector = cms::alpakatools::SimpleVector<CellNeighbors>;
   using CellTracksVector = cms::alpakatools::SimpleVector<CellTracks>;

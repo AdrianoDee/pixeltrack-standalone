@@ -67,11 +67,11 @@ public:
   ALPAKA_FN_ACC ALPAKA_FN_INLINE int16_t clusterSizeX(int i) const { return m_xsize[i]; }
   ALPAKA_FN_ACC ALPAKA_FN_INLINE int16_t& clusterSizeY(int i) { return m_ysize[i]; }
   ALPAKA_FN_ACC ALPAKA_FN_INLINE int16_t clusterSizeY(int i) const { return m_ysize[i]; }
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint16_t& detectorIndex(int i) { return m_detInd[i]; }
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint16_t detectorIndex(int i) const { return m_detInd[i]; }
+  ALPAKA_FN_ACC ALPAKA_FN_INLINE int16_t& detectorIndex(int i) { return m_detInd[i]; }
+  ALPAKA_FN_ACC ALPAKA_FN_INLINE int16_t detectorIndex(int i) const { return m_detInd[i]; }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE int32_t const* hitsModuleStarts() const { return m_hitsModuleStart; }
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE int32_t hitsModuleStart(int i) const { return m_hitsModuleStart[i]; }
+  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t const* hitsModuleStarts() const { return m_hitsModuleStart; }
+  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t hitsModuleStart(int i) const { return m_hitsModuleStart[i]; }
 private:
   // TO DO: NB: added __restrict__ versus legacy
 
@@ -92,10 +92,10 @@ private:
   int32_t* __restrict__ m_charge;
   int16_t* __restrict__ m_xsize;
   int16_t* __restrict__ m_ysize;
-  uint16_t* __restrict__ m_detInd;
+  int16_t* __restrict__ m_detInd;
 
   // supporting objects
-  int32_t const* m_hitsModuleStart;               // forwarded from clusters
+  uint32_t const* m_hitsModuleStart;               // forwarded from clusters
 
   uint32_t m_nHits;
 };

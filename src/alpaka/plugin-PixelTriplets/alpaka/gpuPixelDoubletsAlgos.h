@@ -233,7 +233,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               break;
 
             auto oi = p[pIndex];  // auto oi = __ldg(p); is not allowed since __ldg is device-only
-          
+
             ALPAKA_ASSERT_ACC(oi >= offsets[outer]);
             ALPAKA_ASSERT_ACC(oi < offsets[outer + 1]);
             auto mo = hh.detectorIndex(oi);
@@ -250,6 +250,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
             if (doClusterCut && zsizeCut(oi))
               continue;
+
             if (doPtCut && ptcut(oi, idphi))
               continue;
 

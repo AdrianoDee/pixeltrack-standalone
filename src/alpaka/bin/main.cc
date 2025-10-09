@@ -266,19 +266,22 @@ int main(int argc, char** argv) {
   edm::Alternatives alternatives;
   if (not empty) {
     // host-only ESModules
-    esmodules = {"BeamSpotESProducer", "SiPixelFedIdsESProducer"};
+    esmodules = {"BeamSpotESProducer"};
+    if (not fromHits) esmodules.emplace_back("SiPixelFedIdsESProducer");
     for (auto const& [backend, weight] : backends) {
       std::string prefix = "alpaka_" + name(backend) + "::";
       // "portable" ESModules
-      esmodules.emplace_back(prefix + "SiPixelFedCablingMapESProducer");
-      esmodules.emplace_back(prefix + "SiPixelGainCalibrationForHLTESProducer");
-      esmodules.emplace_back(prefix + "PixelCPEFastESProducer");
-      esmodules.emplace_back(prefix + "CAGeometryESProducer");
+      if (not fromHits) esmodules.emplace_back(prefix + "SiPixelFedCablingMapESProducer");
+      if (not fromHits) esmodules.emplace_back(prefix + "SiPixelGainCalibrationForHLTESProducer");
+      if (not fromHits) esmodules.emplace_back(prefix + "PixelCPEFastESProducer");
+      if (not fromHits) esmodules.emplace_back(prefix + "CAGeometryESProducer");
+      if (fromHits) esmodules.emplace_back(prefix + "AdHocCAGeometryESProducer");
       // "portable" EDModules
       std::vector<std::string> edmodules;
       edmodules.emplace_back(prefix + "BeamSpotToAlpaka");
-      edmodules.emplace_back(prefix + "SiPixelRawToCluster");
-      edmodules.emplace_back(prefix + "SiPixelRecHitAlpaka");
+      if (not fromHits) edmodules.emplace_back(prefix + "SiPixelRawToCluster");
+      if (not fromHits) edmodules.emplace_back(prefix + "SiPixelRecHitAlpaka");
+      if (fromHits) edmodules.emplace_back(prefix + "SiPixelRecHitFromSimple");
       edmodules.emplace_back(prefix + "CAHitNtupletAlpaka");
       edmodules.emplace_back(prefix + "PixelVertexProducerAlpaka");
       if (transfer) {

@@ -40,7 +40,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
 
        {
-        std::cout << "Testing hits from simple hits"<< std::endl;
+        // std::cout << "Testing hits from simple hits"<< std::endl;
         size_t nh = 3;
         float xl[3] = {1.0f, 2.0f, 3.0f};
         float yl[3] = {4.0f, 5.0f, 6.0f};

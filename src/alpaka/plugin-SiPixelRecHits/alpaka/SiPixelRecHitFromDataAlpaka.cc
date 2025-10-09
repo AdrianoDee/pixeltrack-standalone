@@ -37,7 +37,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     *bsHost_ = iSetup.get<BeamSpotPOD>();
 
     cms::alpakatools::ScopedContextProduce<Queue> ctx{iEvent.streamID()};
-    
+
     auto const& simpleHits = iEvent.get(tSimpleHits_);
     TrackingRecHit2DAlpaka hits(simpleHits, ctx.stream());
 

@@ -90,6 +90,7 @@ namespace cms {
                                                                                            uint32_t totSize,
                                                                                            uint32_t nthreads,
                                                                                            TQueue &queue) {
+
       launchZero<TAcc>(h, queue);
 
       const auto threadsPerBlockOrElementsPerThread = nthreads;
@@ -97,7 +98,10 @@ namespace cms {
       const auto workDiv = make_workdiv<TAcc>(blocksPerGrid, threadsPerBlockOrElementsPerThread);
 
       alpaka::enqueue(queue, alpaka::createTaskKernel<TAcc>(workDiv, countFromVector(), h, nh, v, offsets));
+
+
       launchFinalize<TAcc>(h, queue);
+
 
       alpaka::enqueue(queue, alpaka::createTaskKernel<TAcc>(workDiv, fillFromVector(), h, nh, v, offsets));
     }

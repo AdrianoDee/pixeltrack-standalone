@@ -59,7 +59,9 @@ namespace edm {
     }
     else
     {
-      in_raw.open(datadir / "hits.txt", std::ios::binary);
+      in_raw.open(datadir / "hits.txt");
+      // TODO: remember to set this back to something more general
+      // in_raw.open(datadir / "hitsTest.txt", std::ios::binary);
       hitToken_ = reg.produces<TrackingRecHitSimpleSoA>();
     }
     std::ifstream in_digiclusters;
@@ -122,7 +124,8 @@ namespace edm {
     }
 
     if (runForMinutes_ < 0 and maxEvents_ < 0) {
-      maxEvents_ = raw_.size();
+      if (not fromHits_) maxEvents_ = raw_.size();
+      else maxEvents_ = hits_.size();
     }
   }
 
@@ -172,7 +175,10 @@ namespace edm {
       }
     }
     auto ev = std::make_unique<Event>(streamId, iev, reg);
-    const int index = old % raw_.size();
+    // This was const. Is it really needed? Can it stay as not const because of the distinct running modes?
+    int index = 0;
+    if (not fromHits_) index = old % raw_.size();
+    else index = old % hits_.size();
 
     if (not fromHits_)
       ev->emplace(rawToken_, raw_[index]);

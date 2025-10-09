@@ -49,14 +49,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   CAHitNtupletGeneratorOnGPU::CAHitNtupletGeneratorOnGPU(edm::ProductRegistry& reg)
       : m_params(true,               // onGPU
                  3,                  // minHitsPerNtuplet,
-                 458752,             // maxNumberOfDoublets
+                 4*458752,             // maxNumberOfDoublets
                  false,              //useRiemannFit
                  true,               // fit5as4,
                  true,               //includeJumpingForwardDoublets
                  true,               // earlyFishbone
                  false,              // lateFishbone
                  true,               // idealConditions
-                 false,              //fillStatistics
+                 true,              //fillStatistics
                  true,               // doClusterCut
                  true,               // doZ0Cut
                  true,               // doPtCut
@@ -69,7 +69,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                  makeQualityCuts())  //,
   {
 #ifdef DUMP_GPU_TK_TUPLES
-    printf("TK: %s %s % %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
+    printf("TK: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
            "tid",
            "qual",
            "nh",
